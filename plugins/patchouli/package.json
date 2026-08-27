@@ -1,0 +1,25 @@
+{
+  "name": "@patchouli/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\build.mjs",
+    "typecheck": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\node_modules\\typescript\\bin\\tsc --noEmit",
+    "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd --test .\\tests\\*.test.mjs",
+    "verify:bundle": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\verify-bundle.mjs",
+    "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

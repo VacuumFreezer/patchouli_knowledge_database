@@ -1,0 +1,29 @@
+{
+  "name": "patchouli",
+  "version": "0.1.0",
+  "description": "Build and query a local Obsidian knowledge database from Codex learning sessions.",
+  "author": {
+    "name": "Patchouli Project"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "knowledge",
+    "learning",
+    "markdown",
+    "obsidian"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Patchouli",
+    "shortDescription": "Build a local knowledge database",
+    "longDescription": "Turn understood concepts into reviewed Markdown cards, connect related cards with Obsidian wikilinks, and query the local vault from Codex.",
+    "developerName": "Patchouli Project",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": [
+      "Save what I learned as a Patchouli card",
+      "Search my Patchouli knowledge database"
+    ]
+  }
+}
