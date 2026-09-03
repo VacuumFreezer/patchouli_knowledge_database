@@ -9,12 +9,13 @@
   "scripts": {
     "build": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\build.mjs",
     "typecheck": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\node_modules\\typescript\\bin\\tsc --noEmit",
-    "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd --test .\\tests\\*.test.mjs",
+    "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\test.mjs",
     "verify:bundle": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\verify-bundle.mjs",
     "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

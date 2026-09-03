@@ -10,12 +10,20 @@ await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
 
 const result = await build({
-  entryPoints: [path.join(pluginRoot, "src", "server.ts")],
-  outfile: path.join(distDirectory, "server.mjs"),
+  entryPoints: {
+    server: path.join(pluginRoot, "src", "server.ts"),
+    core: path.join(pluginRoot, "src", "core", "index.ts"),
+  },
+  outdir: distDirectory,
+  entryNames: "[name]",
+  outExtension: { ".js": ".mjs" },
   bundle: true,
   platform: "node",
   format: "esm",
   target: "node20",
+  banner: {
+    js: 'import { createRequire as __patchouliCreateRequire } from "node:module"; const require = __patchouliCreateRequire(import.meta.url);',
+  },
   sourcemap: true,
   metafile: true,
   logLevel: "info",

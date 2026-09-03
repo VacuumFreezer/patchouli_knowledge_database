@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-08-27T15:20:12-04:00
+Last updated: 2026-08-29T02:49:40-04:00
 
 ## How this tracker is used
 
@@ -18,7 +18,7 @@ Last updated: 2026-08-27T15:20:12-04:00
 | --- | --- | --- | --- | --- |
 | 1. Governance and contracts | Establish tracking, architecture, setup, card format, commands, and change policy. | Complete | 2026-08-26T18:47:37-04:00 | 2026-08-26T18:49:33-04:00 |
 | 2. Plugin scaffold and runtime | Produce a validated, bundled local plugin and repo marketplace. | Complete | 2026-08-27T15:06:08-04:00 | 2026-08-27T15:20:12-04:00 |
-| 3. Local vault and card engine | Safely configure, scan, search, and atomically write an Obsidian card directory. | Not started | — | — |
+| 3. Local vault and card engine | Safely configure, scan, search, and atomically write an Obsidian card directory. | Complete | 2026-08-29T02:34:29-04:00 | 2026-08-29T02:49:40-04:00 |
 | 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Not started | — | — |
 | 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Not started | — | — |
 | 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Not started | — | — |
@@ -74,23 +74,23 @@ Last updated: 2026-08-27T15:20:12-04:00
 
 ### Planned implementation
 
-- [ ] Mark Stage 3 In progress after Stage 2 is complete.
-- [ ] Define and validate the persisted configuration containing one absolute vault path and a relative cards directory defaulting to `Patchouli`.
-- [ ] Store configuration in the Windows user application-data directory, outside the vault.
-- [ ] Require an existing writable vault directory and warn, rather than fail, when `.obsidian` is absent.
-- [ ] Reject absolute card-directory values, traversal, resolved paths outside the vault, and symlink escapes.
-- [ ] Derive Windows-safe filenames only from card titles; never accept a destination path from the model or UI.
-- [ ] Parse Markdown and YAML frontmatter defensively, including cards without frontmatter or with malformed metadata.
-- [ ] Scan only the configured cards directory and build a disposable in-memory lexical index.
-- [ ] Rank title, category, and body matches deterministically without embeddings.
-- [ ] Render cards from the canonical template without a Key Concepts section.
-- [ ] Write through a temporary file in the destination directory and complete with an atomic rename.
-- [ ] Reject existing destination files and prove they remain unchanged.
-- [ ] Add unit and temporary-vault integration tests for the behavior above.
+- [x] Mark Stage 3 In progress after Stage 2 is complete.
+- [x] Define and validate the persisted configuration containing one absolute vault path and a relative cards directory defaulting to `Patchouli`.
+- [x] Store configuration in the Windows user application-data directory, outside the vault.
+- [x] Require an existing writable vault directory and warn, rather than fail, when `.obsidian` is absent.
+- [x] Reject absolute card-directory values, traversal, resolved paths outside the vault, and symlink escapes.
+- [x] Derive Windows-safe filenames only from card titles; never accept a destination path from the model or UI.
+- [x] Parse Markdown and YAML frontmatter defensively, including cards without frontmatter or with malformed metadata.
+- [x] Scan only the configured cards directory and build a disposable in-memory lexical index.
+- [x] Rank title, category, and body matches deterministically without embeddings.
+- [x] Render cards from the canonical template without a Key Concepts section.
+- [x] Write through a flushed temporary file in the destination directory and complete with an atomic no-replace promotion; avoid overwrite-capable Windows rename semantics.
+- [x] Reject existing destination files and prove they remain unchanged.
+- [x] Add unit and temporary-vault integration tests for the behavior above.
 
 **Exit criterion:** A temporary vault can be configured, scanned, searched, and written safely, including collision and path-escape tests.
 
-**Evidence:** Pending. Record test command, passing test count, and temporary-vault scenarios here.
+**Evidence:** Node `v24.19.0` and pnpm `11.19.0` were used. `pnpm typecheck` passed. `pnpm test` performed a fresh two-entry build and passed 22/22 tests covering `%APPDATA%` configuration, active-vault replacement, missing `.obsidian` warnings, missing and invalid directories, Windows filename sanitization, YAML escaping, normal/manual/missing/malformed frontmatter, Unicode cards, title/category/body ranking, deterministic ties, category filters and counts, junction escape, traversal, temporary-vault write/scan/search/read, duplicate preservation, collision races, and atomic failure cleanup. The build produced `dist/server.mjs` (773,441 bytes) and `dist/core.mjs` (301,550 bytes). Repository and plugin-creator validation passed. `pnpm verify:bundle` found no external package imports across both distributable bundles. `pnpm inspect:mcp` initialized through the Windows launcher and confirmed zero tools, preserving the Stage 4 boundary. `git diff --check` passed, and the final source audit found no unfinished markers or Stage 4 tool registrations.
 
 ## Stage 4 — MCP tools and capture review
 
@@ -189,4 +189,4 @@ Last updated: 2026-08-27T15:20:12-04:00
 
 ## Current next action
 
-Begin Stage 3 in a separate development turn: implement and test the local vault and card engine without starting Stage 4.
+Begin Stage 4 in a separate development turn: expose the reviewed MCP tools and inline confirmation workflow on top of the completed card engine.

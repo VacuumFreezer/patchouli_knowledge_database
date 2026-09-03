@@ -10,7 +10,7 @@ const server = new McpServer(
   {
     capabilities: { tools: {} },
     instructions:
-      "Patchouli is a local Obsidian knowledge database. This runtime scaffold intentionally exposes no tools until the card engine and reviewed MCP interface are implemented.",
+      "Patchouli is a local Obsidian knowledge database. The local card engine is bundled, but this runtime intentionally exposes no tools until the reviewed MCP interface is implemented in Stage 4.",
   },
 );
 

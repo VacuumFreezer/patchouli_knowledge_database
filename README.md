@@ -104,7 +104,9 @@ Every new card follows [prompts/card_template.md](prompts/card_template.md):
 
 ## Development setup
 
-Stage 2 provides the repo marketplace, validated plugin manifest, TypeScript workspace, and bundled stdio MCP runtime. The runtime deliberately reports an empty tool catalog until later stages implement the card engine and public MCP interface; the marketplace is not registered or installed until Stage 6.
+Stage 3 provides the local configuration, path-safety, Markdown parsing/rendering, lexical indexing, and create-only card engine. The MCP runtime deliberately continues to report an empty tool catalog until Stage 4 exposes the reviewed public interface; the marketplace is not registered or installed until Stage 6.
+
+The engine stores configuration at `%APPDATA%\Patchouli\configuration.json`, rebuilds its search index from Markdown whenever cards are scanned, and never persists a secondary database. Card saves write and flush a temporary file in the cards directory, then use an atomic no-replace filesystem promotion. This is stronger than an ordinary Windows rename, which may replace an existing destination during a race.
 
 Prerequisites:
 
@@ -125,7 +127,7 @@ pnpm validate:plugin
 pnpm inspect:mcp
 ```
 
-Run `build` before `test`, `verify:bundle`, or `inspect:mcp` after a clean checkout. `verify:bundle` rejects external package imports, and `inspect:mcp` starts the server through the same Windows launcher used by `.mcp.json`, completes MCP initialization, and checks `tools/list`.
+`test` performs a fresh build before running the unit and temporary-vault suites. `verify:bundle` rejects external package imports, and `inspect:mcp` starts the server through the same Windows launcher used by `.mcp.json`, completes MCP initialization, and checks `tools/list`.
 
 The production plugin will bundle the MCP server and review component. Its Windows launcher will locate the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin will not require development dependencies.
 
