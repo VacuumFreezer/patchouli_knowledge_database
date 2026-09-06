@@ -2,7 +2,7 @@
 
 ## Overview
 
-This app is a self-learning tool. It condense the knowledge from every session into a interactive knowledge database. Typically, the user will provide some content, for example paper, blog, or just concepts. After interact with AI chatbot and fully understand the knowledge, the user will call patchouli to condense the knowledge covered in this session into the database, with user defined categories and annotations. The knowledge will be stored as a markdown file, called a card. If connections exists between cards, then an external link will be created using Obsidian. 
+This app is a self-learning tool. It condenses the knowledge from every session into an interactive knowledge database. Typically, the user will provide some content, for example a paper, blog, or concept. After interacting with an AI chatbot and understanding the knowledge, the user will call Patchouli to condense the knowledge covered in the session into the database, with user-defined categories and an editable agent-written Summary. A more concrete, paraphrased Detail section expands the Summary and supports Markdown/LaTeX formulas. The knowledge is stored as a Markdown file called a card. When connections exist between cards, Obsidian wikilinks are created.
 
 ## Scope
 
@@ -27,13 +27,13 @@ Use Obsidian engine to manage knowledge cards and generate external links. The c
 For these skills, try to search the website whether there are built-in skills, or we should develop ourselves.
 
 1. read the input and pickout the critical concepts
-2. condense the dialogue into clear and concise content that summarize the user's understanding
+2. condense the dialogue into a concise Summary plus a substantially more concrete, paraphrased Detail section
 3. how to judge whether two cards should have connections
 4. quick inquiries in the database
 
 #### UI
 
-A brief UI. When the user decide to submit one understood knowledge to the database, this UI will ask for the following information: name, categories, annotations. These then turn into content inside one card.
+A brief UI. When the user decides to submit one understood concept to the database, the UI lets them edit the name, categories, agent-written Summary, detailed Markdown explanation, evidence, sources, and selected connections before saving one card.
 
 ## Path
 The app source files should be in D:\Codex\workspaces\patchouli_knowledge_database.

@@ -2,6 +2,43 @@
 
 Patchouli records each cohesive source, configuration, test, UI, or skill edit batch here. Entries use an ISO-8601 timestamp with the America/New_York UTC offset and briefly state motivation and changes. Bookkeeping-only updates to this file or `PROGRESS.md` do not require recursive entries.
 
+## 2026-09-04
+
+### 2026-09-04T14:08:16-04:00 — Keep Markdown review local
+
+- **Motivation:** Untrusted Markdown image syntax must not cause the inline review app to fetch remote content automatically.
+- **Changes:** Replaced preview images with accessible text placeholders while retaining Markdown and KaTeX rendering, and added a jsdom regression proving remote image elements are not created.
+
+### 2026-09-04T13:57:43-04:00 — Complete the Summary and Detail review path
+
+- **Motivation:** Ensure the richer Detail content contributes to discovery, renders mathematical notation during review, and cannot silently lose retired draft fields.
+- **Changes:** Added Detail to lexical link suggestions, made the card draft schema strict, bundled a live Markdown/KaTeX preview with no external runtime assets, validated reserved headings in the UI, and expanded protocol/UI tests for multiline formulas, required Summary/Detail, retired-field rejection, and rendered math.
+
+### 2026-09-04T13:53:22-04:00 — Protect the revised card structure
+
+- **Motivation:** Let Detail use helpful Markdown without allowing draft content to collide with the server-owned card sections, while preserving access to cards created under the earlier format.
+- **Changes:** Reserved level-one and level-two headings in Summary and Detail outside fenced code, allowed lower-level explanatory subheadings, and added regressions for structural-heading rejection and search/read compatibility with legacy My Understanding and Annotations cards.
+
+### 2026-09-04T13:41:21-04:00 — Update the reviewed MCP card shape
+
+- **Motivation:** Keep preview, confirmation, and UI editing consistent with the revised Summary/Detail card contract.
+- **Changes:** Replaced old annotation and understanding fields in MCP schemas and fallback text, added editable Summary and Detail controls with math guidance, and updated protocol and jsdom tests to reject the retired fields.
+
+### 2026-09-04T13:39:11-04:00 — Carry Summary and Detail into card rendering
+
+- **Motivation:** Make the revised card contract authoritative in the Stage 3 engine rather than documentation-only.
+- **Changes:** Replaced annotation and understanding draft fields with required Detail Markdown, rendered Summary and Detail as the leading card sections, preserved inline and display LaTeX verbatim, and updated renderer and temporary-vault tests.
+
+### 2026-09-04T13:36:46-04:00 — Revise the card content contract
+
+- **Motivation:** Remove overlap among annotation, Summary, and My Understanding while giving future readers a concrete explanation that can preserve mathematical notation.
+- **Changes:** Replaced the three overlapping fields with one editable agent-written Summary, added a required paraphrased Detail with Obsidian-compatible Markdown/LaTeX math, and aligned the card template, product overview, capture flow, and README contract.
+
+### 2026-09-04T03:11:33-04:00 — Implement reviewed MCP capture
+
+- **Motivation:** Expose Patchouli's local engine through a safe, confirm-before-write workflow that remains usable without custom UI.
+- **Changes:** Added eight schema-backed MCP tools with local safety annotations and structured fallbacks, expiring idempotent preview tokens, collision inspection, a bundled accessible React review app with MCP Apps bridge calls, and protocol/UI/end-to-end tests.
+
 ## 2026-08-29
 
 ### 2026-08-29T02:48:49-04:00 — Cover the configuration lifecycle

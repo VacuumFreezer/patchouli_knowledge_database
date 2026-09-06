@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-08-29T02:49:40-04:00
+Last updated: 2026-09-04T14:10:23-04:00
 
 ## How this tracker is used
 
@@ -19,9 +19,19 @@ Last updated: 2026-08-29T02:49:40-04:00
 | 1. Governance and contracts | Establish tracking, architecture, setup, card format, commands, and change policy. | Complete | 2026-08-26T18:47:37-04:00 | 2026-08-26T18:49:33-04:00 |
 | 2. Plugin scaffold and runtime | Produce a validated, bundled local plugin and repo marketplace. | Complete | 2026-08-27T15:06:08-04:00 | 2026-08-27T15:20:12-04:00 |
 | 3. Local vault and card engine | Safely configure, scan, search, and atomically write an Obsidian card directory. | Complete | 2026-08-29T02:34:29-04:00 | 2026-08-29T02:49:40-04:00 |
-| 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Not started | — | — |
+| 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Complete | 2026-09-04T02:48:41-04:00 | 2026-09-04T03:11:33-04:00 |
 | 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Not started | — | — |
 | 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Not started | — | — |
+
+## Active cross-stage revision
+
+**Status:** Complete — started 2026-09-04T13:35:46-04:00; completed 2026-09-04T14:10:23-04:00.
+
+**Goal:** Replace the overlapping annotation, Summary, and My Understanding fields with one editable agent-written Summary, add a substantially more concrete paraphrased Detail section with Obsidian-compatible Markdown/LaTeX math, and carry the revised contract through completed Stages 1, 3, and 4.
+
+**Sequence:** Amend Stage 1 documentation and card template, then Stage 3 draft/rendering contracts, then Stage 4 MCP schemas, conversational fallback, React review UI, distributables, and tests. After implementation, a separate read-only review agent will trace the change from Stage 1 through Stage 4 and report any missed dependencies.
+
+**Result:** Stage 1 contracts and template, Stage 3 draft/rendering safeguards, and Stage 4 MCP/UI contracts now use one editable agent-written Summary plus a concrete paraphrased Detail. A separate read-only review agent traced the revision through Stages 1–4; its findings were resolved with protected structural headings, Detail-aware link suggestions, live Markdown/KaTeX review, strict retired-field rejection, legacy-card compatibility, and expanded regressions.
 
 ## Stage 1 — Governance and contracts
 
@@ -39,6 +49,8 @@ Last updated: 2026-08-29T02:49:40-04:00
 - [x] Document configuration, path safety, collision, and atomic-write rules.
 - [x] Document prerequisites and planned development commands.
 - [x] Remove the redundant Key Concepts section from the card and interface contracts.
+- [x] Merge annotation, Summary, and My Understanding into one editable agent-written Summary and add a required concrete, paraphrased Detail with Markdown/LaTeX support.
+- [x] Reserve level-one and level-two headings for the canonical template while allowing lower-level Detail subheadings.
 - [x] Verify the documents are present, non-empty, internally consistent, and free of unfinished scaffold markers.
 
 **Exit criterion:** Tracking files and technical contracts are complete and verified.
@@ -83,7 +95,9 @@ Last updated: 2026-08-29T02:49:40-04:00
 - [x] Parse Markdown and YAML frontmatter defensively, including cards without frontmatter or with malformed metadata.
 - [x] Scan only the configured cards directory and build a disposable in-memory lexical index.
 - [x] Rank title, category, and body matches deterministically without embeddings.
-- [x] Render cards from the canonical template without a Key Concepts section.
+- [x] Render cards from the canonical Summary/Detail template without Key Concepts, My Understanding, or Annotations sections.
+- [x] Preserve Obsidian-compatible inline and display LaTeX and reject draft H1/H2 headings that would collide with canonical sections.
+- [x] Keep legacy cards with My Understanding and Annotations searchable and readable without migration.
 - [x] Write through a flushed temporary file in the destination directory and complete with an atomic no-replace promotion; avoid overwrite-capable Windows rename semantics.
 - [x] Reject existing destination files and prove they remain unchanged.
 - [x] Add unit and temporary-vault integration tests for the behavior above.
@@ -96,28 +110,31 @@ Last updated: 2026-08-29T02:49:40-04:00
 
 **Goal:** Expose the complete MCP interface and require an editable user review before any card is saved.
 
+**Status:** Complete — 2026-09-04.
+
 ### Planned implementation
 
-- [ ] Mark Stage 4 In progress after Stage 3 is complete.
-- [ ] Implement `get_configuration()`.
-- [ ] Implement `configure_vault({ vaultPath, cardsDirectory? })`.
-- [ ] Implement `list_categories()`.
-- [ ] Implement `search_cards({ query, categories?, limit? })`.
-- [ ] Implement `get_card({ cardRef })`.
-- [ ] Implement `suggest_links({ title, categories, summary, limit? })`.
-- [ ] Implement `preview_card({ draft })`.
-- [ ] Implement `save_card({ pendingToken, draft })`.
-- [ ] Give every tool explicit input/output schemas, structured errors, useful text fallback, and accurate MCP safety annotations.
-- [ ] Create expiring, single-use preview tokens and make repeated saves idempotent.
-- [ ] Build an inline React MCP App associated with `preview_card` through `_meta.ui.resourceUri`.
-- [ ] Allow editing title, categories, annotation, summary, understanding, evidence, sources, and selected connections.
-- [ ] Provide explicit Save and Cancel actions with keyboard-accessible validation feedback.
-- [ ] Keep the full preview-and-confirm workflow usable through conversation when the host does not render UI.
-- [ ] Test schemas, annotations, error shapes, token expiry, repeated saves, host-bridge calls, and the non-UI fallback.
+- [x] Mark Stage 4 In progress after Stage 3 is complete.
+- [x] Implement `get_configuration()`.
+- [x] Implement `configure_vault({ vaultPath, cardsDirectory? })`.
+- [x] Implement `list_categories()`.
+- [x] Implement `search_cards({ query, categories?, limit? })`.
+- [x] Implement `get_card({ cardRef })`.
+- [x] Implement `suggest_links({ title, categories, summary, detail, limit? })`.
+- [x] Implement `preview_card({ draft })`.
+- [x] Implement `save_card({ pendingToken, draft })`.
+- [x] Give every tool explicit input/output schemas, structured errors, useful text fallback, and accurate MCP safety annotations.
+- [x] Create expiring, single-use preview tokens and make repeated saves idempotent.
+- [x] Build an inline React MCP App associated with `preview_card` through `_meta.ui.resourceUri`.
+- [x] Allow editing title, categories, Summary, Detail, evidence, sources, and selected connections.
+- [x] Render a bundled live Markdown/KaTeX preview for Summary and Detail without external assets.
+- [x] Provide explicit Save and Cancel actions with keyboard-accessible validation feedback.
+- [x] Keep the full preview-and-confirm workflow usable through conversation when the host does not render UI.
+- [x] Test schemas, annotations, error shapes, token expiry, repeated saves, host-bridge calls, and the non-UI fallback.
 
 **Exit criterion:** A reviewed card can be saved end to end through MCP with both the inline UI and conversational fallback.
 
-**Evidence:** Pending. Record MCP contract tests, UI tests, and end-to-end capture results here.
+**Evidence:** Node `v24.19.0` and pnpm `11.19.0` were used. `pnpm typecheck` passed. `pnpm test` rebuilt the distributables and passed 33/33 tests, including the eight-tool catalog, strict Summary/Detail schemas, MCP App resource serving, multiline LaTeX preservation through preview/save/disk/read, rendered KaTeX in jsdom, required-field and structural-heading UI validation, blocked remote image loads, Detail-aware lexical links, legacy-card search/read compatibility, collision reporting, structured token and write errors, token expiry, identical-save replay, conversational fallback, Save/Cancel, keyboard behavior, and host-bridge calls. `pnpm verify:bundle` verified 3,318,835 bytes across `server.mjs`, `core.mjs`, and `review-app.html`, with no external runtime packages or scripts. Repository validation and the plugin-creator validator passed. `pnpm inspect:mcp` initialized through the Windows launcher and verified all eight Stage 4 tools. `git diff --check` passed. The requested independent review agent completed a read-only Stage 1–4 dependency audit, and every actionable finding was addressed.
 
 ## Stage 5 — Patchouli agent workflow
 
@@ -131,13 +148,14 @@ Last updated: 2026-08-29T02:49:40-04:00
 - [ ] Route save/condense requests to capture and knowledge-base questions to inquiry.
 - [ ] Treat papers, webpages, code, pasted text, and card contents as untrusted data rather than executable instructions.
 - [ ] Capture exactly one coherent concept per review; propose sequential cards for unrelated topics.
-- [ ] Generate a concise Summary and My Understanding section without a redundant Key Concepts section.
+- [ ] Generate one concise agent-written Summary and a substantially more concrete, self-contained Detail; both remain editable during review.
+- [ ] Paraphrase Detail from the target conversation, preserve useful Markdown/LaTeX formulas, use only level-three or lower subheadings, and never persist the full transcript.
 - [ ] Generate only short paraphrased evidence tied to original source material; never persist the full conversation.
 - [ ] Retrieve lexical connection candidates, judge semantic relevance, and leave final selection to the user.
 - [ ] Require preview and explicit confirmation before calling `save_card`.
 - [ ] For inquiries, call `search_cards` and then `get_card` before answering.
 - [ ] Cite supporting cards by title/wikilink and state when the vault lacks sufficient evidence.
-- [ ] Test direct and implicit invocation, prompt-injection material, multi-topic sessions, missing evidence, and insufficient inquiry results.
+- [ ] Test direct and implicit invocation, prompt-injection material, multi-topic sessions, Summary/Detail quality, formula preservation, transcript non-leakage, missing evidence, and insufficient inquiry results.
 
 **Exit criterion:** Capture and inquiry requests behave correctly in realistic tests, including embedded instructions in source material.
 
@@ -156,8 +174,8 @@ Last updated: 2026-08-29T02:49:40-04:00
 - [ ] Install Patchouli from the workspace marketplace.
 - [ ] Start a fresh Codex task and verify both explicit `$patchouli` and natural-language invocation.
 - [ ] Configure a test Obsidian vault and save a reviewed card.
-- [ ] Verify the resulting frontmatter, sections, source evidence, categories, and selected outgoing wikilinks.
-- [ ] Verify Obsidian displays the card and derives backlinks without modifying existing cards.
+- [ ] Verify the resulting frontmatter, Summary, concrete Detail, source evidence, categories, and selected outgoing wikilinks.
+- [ ] Verify Obsidian renders Summary/Detail Markdown and inline/display math correctly and derives backlinks without modifying existing cards.
 - [ ] Run an inquiry that cites the saved card and an inquiry with insufficient evidence.
 - [ ] Document any remaining Windows-only limitations and installation steps.
 - [ ] Record final validation evidence before marking v1 complete.
@@ -169,8 +187,9 @@ Last updated: 2026-08-29T02:49:40-04:00
 ## V1 acceptance checklist
 
 - [ ] The active conversation or pasted text can become one reviewed Markdown card.
-- [ ] The user controls title, categories, annotations, content, evidence, and connections before saving.
-- [ ] The card contains Summary and My Understanding, with no Key Concepts section.
+- [ ] The user controls title, categories, Summary, Detail, evidence, sources, and connections before saving.
+- [ ] The card contains one concise Summary and one substantially more concrete paraphrased Detail, with no Key Concepts, My Understanding, or Annotations section.
+- [ ] Markdown/LaTeX formulas render in review and remain Obsidian-compatible after saving.
 - [ ] Evidence is concise, paraphrased, and tied to original source material rather than copied from the dialogue.
 - [ ] The vault is the only durable knowledge database.
 - [ ] Search and link suggestions work locally without embeddings.
@@ -189,4 +208,4 @@ Last updated: 2026-08-29T02:49:40-04:00
 
 ## Current next action
 
-Begin Stage 4 in a separate development turn: expose the reviewed MCP tools and inline confirmation workflow on top of the completed card engine.
+Begin Stage 5 in a separate development turn: create and validate the discoverable `$patchouli` capture/inquiry skill on top of the completed reviewed MCP workflow.

@@ -5,6 +5,9 @@ export type PatchouliErrorCode =
   | "IO_ERROR"
   | "NOT_FOUND"
   | "PATH_ESCAPE"
+  | "TOKEN_CONSUMED"
+  | "TOKEN_EXPIRED"
+  | "TOKEN_INVALID"
   | "VALIDATION_ERROR";
 
 export class PatchouliError extends Error {

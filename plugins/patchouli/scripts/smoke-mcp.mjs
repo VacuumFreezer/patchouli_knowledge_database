@@ -17,16 +17,27 @@ const transport = new StdioClientTransport({
   cwd: pluginRoot,
   stderr: "pipe",
 });
-const client = new Client({ name: "patchouli-stage-3-smoke", version: "0.1.0" });
+const client = new Client({ name: "patchouli-stage-4-smoke", version: "0.1.0" });
 
 try {
   await client.connect(transport);
   const result = await client.listTools();
   if (!Array.isArray(result.tools)) throw new Error("tools/list did not return an array");
-  if (result.tools.length !== 0) {
-    throw new Error(`Stage 3 runtime unexpectedly exposes ${result.tools.length} tools`);
+  const expectedTools = [
+    "configure_vault",
+    "get_card",
+    "get_configuration",
+    "list_categories",
+    "preview_card",
+    "save_card",
+    "search_cards",
+    "suggest_links",
+  ];
+  const actualTools = result.tools.map((tool) => tool.name).sort();
+  if (JSON.stringify(actualTools) !== JSON.stringify(expectedTools)) {
+    throw new Error(`Stage 4 tool catalog mismatch: ${actualTools.join(", ")}`);
   }
-  console.log("MCP initialization and tools/list passed (0 tools, as expected before Stage 4). ");
+  console.log("MCP initialization and tools/list passed (8 Stage 4 tools).");
 } finally {
   await client.close();
 }

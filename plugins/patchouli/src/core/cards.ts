@@ -31,7 +31,41 @@ function normalizeMarkdown(value: string, field: string, allowEmpty = false): st
   if (!allowEmpty && normalized.length === 0) {
     throw new PatchouliError("VALIDATION_ERROR", `${field} must not be empty.`, { field });
   }
+  assertNoStructuralHeadings(normalized, field);
   return normalized;
+}
+
+function assertNoStructuralHeadings(markdown: string, field: string): void {
+  const lines = markdown.split(/\r?\n/u);
+  let fence: { marker: "`" | "~"; length: number } | undefined;
+  let previousLine = "";
+
+  for (const line of lines) {
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/u)?.[1];
+    if (fenceMatch) {
+      const marker = fenceMatch[0] as "`" | "~";
+      if (fence?.marker === marker && fenceMatch.length >= fence.length) {
+        fence = undefined;
+      } else if (!fence) {
+        fence = { marker, length: fenceMatch.length };
+      }
+      previousLine = "";
+      continue;
+    }
+    if (fence) continue;
+
+    const hasAtxStructuralHeading = /^ {0,3}#{1,2}(?:[ \t]+|$)/u.test(line);
+    const hasSetextStructuralHeading = previousLine.trim().length > 0
+      && /^ {0,3}(?:=+|-+)[ \t]*$/u.test(line);
+    if (hasAtxStructuralHeading || hasSetextStructuralHeading) {
+      throw new PatchouliError(
+        "VALIDATION_ERROR",
+        `${field} cannot contain level-one or level-two headings; use ### or a lower heading level.`,
+        { field },
+      );
+    }
+    previousLine = line;
+  }
 }
 
 function uniqueTrimmed(values: string[], field: string): string[] {
@@ -96,9 +130,8 @@ export function normalizeCardDraft(draft: CardDraft): NormalizedCardDraft {
     title,
     filename: sanitizeTitleToFilename(title),
     categories,
-    annotation: normalizeMarkdown(draft.annotation, "annotation", true),
     summaryMarkdown: normalizeMarkdown(draft.summaryMarkdown, "summaryMarkdown"),
-    understandingMarkdown: normalizeMarkdown(draft.understandingMarkdown, "understandingMarkdown"),
+    detailMarkdown: normalizeMarkdown(draft.detailMarkdown, "detailMarkdown"),
     evidence,
     sources,
     connections,
@@ -179,9 +212,9 @@ export function renderCard(
     "",
     normalized.summaryMarkdown,
     "",
-    "## My Understanding",
+    "## Detail",
     "",
-    normalized.understandingMarkdown,
+    normalized.detailMarkdown,
     "",
     "## Evidence",
     "",
@@ -190,10 +223,6 @@ export function renderCard(
     "## Connections",
     "",
     connections,
-    "",
-    "## Annotations",
-    "",
-    normalized.annotation || "_None._",
     "",
     "## Sources",
     "",

@@ -10,9 +10,8 @@ function draft(title = "Integration Card") {
   return {
     title,
     categories: ["Testing", "Local"],
-    annotation: "Reviewed locally.",
     summaryMarkdown: "Atomic local Markdown storage.",
-    understandingMarkdown: "The vault remains the durable database.",
+    detailMarkdown: "The implementation flushes a temporary file and promotes it without replacing an existing note. The vault remains the durable database.",
     evidence: [{ claim: "The write was verified", sourceReference: "Integration test" }],
     sources: [{ type: "text", label: "Integration fixture" }],
     connections: [],
@@ -77,6 +76,42 @@ test("writes, scans, searches, categorizes, and reads a temporary-vault card", a
   ]);
   assert.equal((await engine.getCard(saved.card.cardRef)).id, "22222222-2222-4222-8222-222222222222");
   assert.equal(engine.index.cards.length, 1);
+});
+
+test("keeps legacy My Understanding and Annotations cards searchable and readable", async (context) => {
+  const { engine, vault } = await fixture(context, true);
+  await engine.configureVault({ vaultPath: vault });
+  const cardsDirectory = path.join(vault, "Patchouli");
+  await mkdir(cardsDirectory);
+  const legacyMarkdown = [
+    "---",
+    'title: "Legacy Card"',
+    "categories:",
+    "  - Archive",
+    "---",
+    "# Legacy Card",
+    "",
+    "## Summary",
+    "",
+    "A historical summary.",
+    "",
+    "## My Understanding",
+    "",
+    "A legacy interpretation remains discoverable.",
+    "",
+    "## Annotations",
+    "",
+    "A legacy note remains intact.",
+    "",
+  ].join("\n");
+  await writeFile(path.join(cardsDirectory, "Legacy Card.md"), legacyMarkdown, "utf8");
+
+  const result = (await engine.searchCards("legacy interpretation"))[0];
+  assert.equal(result.title, "Legacy Card");
+  const card = await engine.getCard(result.cardRef);
+  assert.match(card.markdown, /## My Understanding/u);
+  assert.match(card.markdown, /## Annotations/u);
+  assert.equal(card.warnings.length, 0);
 });
 
 test("rejects duplicate titles and leaves the existing card unchanged", async (context) => {

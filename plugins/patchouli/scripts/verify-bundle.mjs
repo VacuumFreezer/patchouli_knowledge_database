@@ -8,6 +8,7 @@ const bundlePaths = [
   path.join(pluginRoot, "dist", "server.mjs"),
   path.join(pluginRoot, "dist", "core.mjs"),
 ];
+const reviewAppPath = path.join(pluginRoot, "dist", "review-app.html");
 const metadataPath = path.join(pluginRoot, "dist", "meta.json");
 const builtins = new Set([...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
 
@@ -18,6 +19,18 @@ for (const bundlePath of bundlePaths) {
     throw new Error(`${path.relative(pluginRoot, bundlePath)} is missing or empty`);
   }
   bundleSize += bundle.size;
+}
+
+const reviewApp = await stat(reviewAppPath);
+if (!reviewApp.isFile() || reviewApp.size === 0) {
+  throw new Error("dist/review-app.html is missing or empty");
+}
+const reviewHtml = await readFile(reviewAppPath, "utf8");
+if (!reviewHtml.includes('id="root"') || !reviewHtml.includes("ui/initialize") || !reviewHtml.includes("tools/call")) {
+  throw new Error("dist/review-app.html is missing the React mount or MCP Apps bridge");
+}
+if (/<script[^>]+src=/iu.test(reviewHtml)) {
+  throw new Error("dist/review-app.html must not depend on external scripts");
 }
 
 const metadata = JSON.parse(await readFile(metadataPath, "utf8"));
@@ -32,4 +45,4 @@ if (packageImports.length > 0) {
   );
 }
 
-console.log(`Bundle verification passed (${bundleSize} bytes across ${bundlePaths.length} files; no external packages).`);
+console.log(`Bundle verification passed (${bundleSize + reviewApp.size} bytes across ${bundlePaths.length + 1} files; no external packages or scripts).`);

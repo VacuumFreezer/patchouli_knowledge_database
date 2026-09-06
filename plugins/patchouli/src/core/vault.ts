@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { parseCard, renderCard } from "./cards.js";
+import { normalizeCardDraft, parseCard, renderCard } from "./cards.js";
 import { ConfigurationStore } from "./configuration.js";
 import { PatchouliError, isNodeError } from "./errors.js";
 import {
@@ -16,6 +16,7 @@ import { CardIndex, listCategories } from "./search.js";
 import type {
   CardDraft,
   ConfigurationStatus,
+  DraftInspection,
   ParsedCard,
   SavedCard,
   SearchOptions,
@@ -182,6 +183,26 @@ export class VaultCardEngine {
       throw new PatchouliError("NOT_FOUND", "cardRef does not identify a Markdown card.", { cardRef });
     }
     return parseCard(await fs.readFile(resolved, "utf8"), toPosixRelativePath(configuration.vaultPath, resolved));
+  }
+
+  async inspectDraft(draft: CardDraft): Promise<DraftInspection> {
+    const configuration = await this.configurationStore.requireConfiguration();
+    const normalizedDraft = normalizeCardDraft(draft);
+    const cardRef = [configuration.cardsDirectory, normalizedDraft.filename].join("/");
+    const destinationPath = await resolveContainedPath(configuration.vaultPath, cardRef, {
+      fieldName: "draft.title",
+    });
+    let exists = false;
+    try {
+      await fs.lstat(destinationPath);
+      exists = true;
+    } catch (error: unknown) {
+      if (!isNodeError(error) || error.code !== "ENOENT") throw error;
+    }
+    return {
+      draft: normalizedDraft,
+      collision: { exists, cardRef },
+    };
   }
 
   async writeCard(

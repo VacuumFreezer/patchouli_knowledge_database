@@ -37,9 +37,8 @@ export interface ConnectionDraft {
 export interface CardDraft {
   title: string;
   categories: string[];
-  annotation: string;
   summaryMarkdown: string;
-  understandingMarkdown: string;
+  detailMarkdown: string;
   evidence: EvidenceDraft[];
   sources: SourceDraft[];
   connections: ConnectionDraft[];
@@ -47,6 +46,16 @@ export interface CardDraft {
 
 export interface NormalizedCardDraft extends CardDraft {
   filename: string;
+}
+
+export interface DraftCollision {
+  exists: boolean;
+  cardRef: string;
+}
+
+export interface DraftInspection {
+  draft: NormalizedCardDraft;
+  collision: DraftCollision;
 }
 
 export interface CardLink {

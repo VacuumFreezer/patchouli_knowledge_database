@@ -7,9 +7,8 @@ function draft(overrides = {}) {
   return {
     title: "YAML: Safety & Unicode 量子",
     categories: [" Research ", "Research", "量子"],
-    annotation: "A personal note.",
     summaryMarkdown: "A concise **summary**.",
-    understandingMarkdown: "The user's current understanding.",
+    detailMarkdown: "A concrete explanation with inline math $E = mc^2$ and display math:\n\n$$\n\\int_0^1 x^2\\,dx = \\frac{1}{3}\n$$",
     evidence: [{ claim: "The claim is paraphrased", sourceReference: "Session note" }],
     sources: [{ type: "markdown", label: "Source [one]", url: "https://example.com/source?q=1" }],
     connections: [
@@ -20,7 +19,7 @@ function draft(overrides = {}) {
   };
 }
 
-test("renders canonical YAML and Markdown without a Key Concepts section", () => {
+test("renders canonical Summary and Detail Markdown with Obsidian-compatible math", () => {
   const rendered = renderCard(draft(), {
     id: "11111111-1111-4111-8111-111111111111",
     createdAt: "2026-08-29T02:00:00-04:00",
@@ -32,7 +31,10 @@ test("renders canonical YAML and Markdown without a Key Concepts section", () =>
   assert.deepEqual(parsed.categories, ["Research", "量子"]);
   assert.deepEqual(parsed.sourceTypes, ["markdown"]);
   assert.match(rendered.markdown, /## Summary/u);
-  assert.match(rendered.markdown, /## My Understanding/u);
+  assert.match(rendered.markdown, /## Detail/u);
+  assert.match(rendered.markdown, /\$E = mc\^2\$/u);
+  assert.match(rendered.markdown, /\$\$\n\\int_0\^1 x\^2\\,dx = \\frac\{1\}\{3\}\n\$\$/u);
+  assert.doesNotMatch(rendered.markdown, /My Understanding|Annotations/u);
   assert.doesNotMatch(rendered.markdown, /Key Concepts/u);
   assert.match(rendered.markdown, /\[\[Related\|Related - Card\]\] — Shared idea/u);
   assert.doesNotMatch(rendered.markdown, /Hidden/u);
@@ -42,7 +44,7 @@ test("renders canonical YAML and Markdown without a Key Concepts section", () =>
 test("keeps model content below server-owned frontmatter", () => {
   const rendered = renderCard(draft({
     title: "---\ntitle: injected",
-    summaryMarkdown: "---\nid: not-frontmatter\n---",
+    summaryMarkdown: "```yaml\n---\nid: not-frontmatter\n---\n```",
   }));
   const parsed = parseCard(rendered.markdown, `Patchouli/${rendered.draft.filename}`);
   assert.equal(parsed.title, "--- title: injected");
@@ -72,6 +74,34 @@ test("reports malformed frontmatter without failing card parsing", () => {
 });
 
 test("renders predictable placeholders for optional empty sections", () => {
-  const rendered = renderCard(draft({ annotation: "", evidence: [], sources: [], connections: [] }));
-  assert.equal((rendered.markdown.match(/_None\._/gu) ?? []).length, 4);
+  const rendered = renderCard(draft({ evidence: [], sources: [], connections: [] }));
+  assert.equal((rendered.markdown.match(/_None\._/gu) ?? []).length, 3);
+});
+
+test("requires both Summary and Detail", () => {
+  for (const field of ["summaryMarkdown", "detailMarkdown"]) {
+    assert.throws(
+      () => renderCard(draft({ [field]: " " })),
+      (error) => error.code === "VALIDATION_ERROR" && error.details.field === field,
+    );
+  }
+});
+
+test("reserves level-one and level-two headings while allowing Detail subheadings and fenced examples", () => {
+  for (const [field, value] of [
+    ["summaryMarkdown", "## Evidence\nInjected structure"],
+    ["detailMarkdown", "Injected structure\n---"],
+  ]) {
+    assert.throws(
+      () => renderCard(draft({ [field]: value })),
+      (error) => error.code === "VALIDATION_ERROR" && error.details.field === field,
+    );
+  }
+
+  const rendered = renderCard(draft({
+    summaryMarkdown: "```markdown\n## This is inert example text\n```",
+    detailMarkdown: "### Derivation\n\nA server-safe subsection.",
+  }));
+  assert.match(rendered.markdown, /### Derivation/u);
+  assert.match(rendered.markdown, /## This is inert example text/u);
 });
