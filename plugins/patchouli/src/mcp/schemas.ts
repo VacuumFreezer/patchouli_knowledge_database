@@ -89,7 +89,7 @@ export const linkCandidateSchema = searchResultSchema.extend({
 export const toolErrorSchema = z.object({
   code: z.string(),
   message: z.string(),
-  details: z.record(z.string(), z.unknown()),
+  details: z.record(z.string(), z.json()),
 });
 
 export const baseOutputShape = {

@@ -72,6 +72,11 @@ test("advertises eight explicit contracts, accurate annotations, and the MCP App
     assert.equal(tool.inputSchema.type, "object", `${tool.name} input schema`);
     assert.equal(tool.outputSchema.type, "object", `${tool.name} output schema`);
     assert.equal(tool.annotations.openWorldHint, false, `${tool.name} stays local`);
+    const detailValues = tool.outputSchema.properties.error.properties.details.additionalProperties;
+    assert.ok(
+      detailValues.$ref || detailValues.anyOf,
+      `${tool.name} error details must declare JSON value types`,
+    );
   }
   assert.equal(listed.tools.find((tool) => tool.name === "save_card").annotations.readOnlyHint, false);
   assert.equal(listed.tools.find((tool) => tool.name === "save_card").annotations.idempotentHint, true);

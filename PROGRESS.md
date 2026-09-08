@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-06T17:48:56-04:00
+Last updated: 2026-09-08T13:24:42-04:00
 
 ## How this tracker is used
 
@@ -21,7 +21,7 @@ Last updated: 2026-09-06T17:48:56-04:00
 | 3. Local vault and card engine | Safely configure, scan, search, and atomically write an Obsidian card directory. | Complete | 2026-08-29T02:34:29-04:00 | 2026-08-29T02:49:40-04:00 |
 | 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Complete | 2026-09-04T02:48:41-04:00 | 2026-09-04T03:11:33-04:00 |
 | 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Complete | 2026-09-06T17:41:22-04:00 | 2026-09-06T17:48:56-04:00 |
-| 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Not started | — | — |
+| 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Complete | 2026-09-08T12:41:10-04:00 | 2026-09-08T13:24:42-04:00 |
 
 ## Active cross-stage revision
 
@@ -167,38 +167,44 @@ Last updated: 2026-09-06T17:48:56-04:00
 
 **Goal:** Validate, register, install, and manually verify Patchouli in the user's Codex and Obsidian environment.
 
+**Status:** Complete — started 2026-09-08T12:41:10-04:00; completed 2026-09-08T13:24:42-04:00.
+
 ### Planned implementation
 
-- [ ] Mark Stage 6 In progress after Stage 5 is complete.
-- [ ] Run the full unit, integration, UI, type-check, build, plugin, and skill validation suites.
-- [ ] Inspect the bundled server with MCP Inspector and call every tool with representative and invalid inputs.
-- [ ] Register the repository marketplace with Codex using the supported marketplace command.
-- [ ] Install Patchouli from the workspace marketplace.
-- [ ] Start a fresh Codex task and verify both explicit `$patchouli` and natural-language invocation.
-- [ ] Configure a test Obsidian vault and save a reviewed card.
-- [ ] Verify the resulting frontmatter, Summary, concrete Detail, source evidence, categories, and selected outgoing wikilinks.
-- [ ] Verify Obsidian renders Summary/Detail Markdown and inline/display math correctly and derives backlinks without modifying existing cards.
-- [ ] Run an inquiry that cites the saved card and an inquiry with insufficient evidence.
-- [ ] Document any remaining Windows-only limitations and installation steps.
-- [ ] Record final validation evidence before marking v1 complete.
+- [x] Mark Stage 6 In progress after Stage 5 is complete.
+- [x] Run the full unit, integration, UI, type-check, build, plugin, and skill validation suites.
+- [x] Inspect the bundled server with MCP Inspector and call every tool with representative and invalid inputs.
+- [x] Register the repository marketplace with Codex using the supported marketplace command.
+- [x] Install Patchouli from the workspace marketplace.
+- [x] Start a fresh Codex task and verify both explicit `$patchouli` and natural-language invocation.
+- [x] Configure a test Obsidian vault and save a reviewed card.
+- [x] Verify the resulting frontmatter, Summary, concrete Detail, source evidence, categories, and selected outgoing wikilinks.
+- [x] Verify Obsidian renders Summary/Detail Markdown and inline/display math correctly and derives backlinks without modifying existing cards.
+- [x] Run an inquiry that cites the saved card and an inquiry with insufficient evidence.
+- [x] Document any remaining Windows-only limitations and installation steps.
+- [x] Record final validation evidence before marking v1 complete.
 
 **Exit criterion:** Patchouli v1 is installed and usable for reviewed capture and evidence-backed inquiry in the current Codex and Obsidian environment.
 
-**Evidence:** Pending. Record installation, fresh-task, capture, Obsidian, backlink, and inquiry results here.
+**Evidence:** Node `v24.19.0` and pnpm `11.19.0` were used. A fresh build and `pnpm test` passed 37/37 unit, integration, UI, skill, path-safety, collision, token, and capture/inquiry contract tests; type checking, repository and canonical plugin/skill validation, bundled-runtime verification (3,318,832 bytes across three files with no external runtime packages or scripts), the eight-tool MCP smoke test, and `git diff --check` also passed. MCP Inspector strict mode reported 0 errors and 0 warnings after structured error details were made explicitly JSON-typed; Inspector exercised all eight tools with representative and invalid inputs, including empty results, missing cards, schema failures, prompt-retired fields, UI metadata, and invalid confirmation tokens.
+
+The repository marketplace was registered as `personal` and `patchouli@personal` version `0.1.0` was installed and enabled at `D:\Codex\home\plugins\cache\personal\patchouli\0.1.0`. SHA-256 comparisons proved the installed server, review UI, and skill were byte-identical to the final repository artifacts. Fresh Codex task `01a081f6-9c6c-70e0-9ac3-0b8d1d1d6e58` used natural-language capture and explicit `$patchouli` capture, ignored embedded prompt-injection text, stopped twice for explicit confirmation, and saved two cards to the isolated Stage 6 vault. The second capture called search, category, link-suggestion, and card-read tools before previewing a user-selected connection to the first card.
+
+Disk and MCP reads confirmed two UUID-frontmatter cards with categories, Summary, concrete Detail, concise paraphrased evidence, sources, five display-math blocks, and one outgoing `[[Bayesian belief updating|Bayesian belief updating]]` link; no retired sections, injected instruction text, or transcript were stored. Obsidian v1.5.3 loaded the vault through an isolated profile, opened both cards in reading mode, rendered 25 and 28 MathJax nodes (including four and two display nodes), exposed the outgoing internal link, and derived `Patchouli/Beta–Bernoulli conjugate updating.md` as the backlink to `Patchouli/Bayesian belief updating.md`. Screenshots recorded the rendered properties, headings, inline/display math, and one-backlink indicator. The installed plugin returned both cards from lexical search; a supported inquiry called `search_cards` followed by `get_card` for both results and cited both wikilinks, while an unrelated heliopause inquiry reported that the vault lacked evidence. The README now records the personal install flow and remaining Windows/Obsidian limitations.
 
 ## V1 acceptance checklist
 
-- [ ] The active conversation or pasted text can become one reviewed Markdown card.
-- [ ] The user controls title, categories, Summary, Detail, evidence, sources, and connections before saving.
-- [ ] The card contains one concise Summary and one substantially more concrete paraphrased Detail, with no Key Concepts, My Understanding, or Annotations section.
-- [ ] Markdown/LaTeX formulas render in review and remain Obsidian-compatible after saving.
-- [ ] Evidence is concise, paraphrased, and tied to original source material rather than copied from the dialogue.
-- [ ] The vault is the only durable knowledge database.
-- [ ] Search and link suggestions work locally without embeddings.
-- [ ] Existing cards cannot be overwritten by capture.
-- [ ] Path traversal and symlink escape cannot write outside the configured cards directory.
-- [ ] Inquiries cite cards and disclose insufficient evidence.
-- [ ] The installed plugin works without an OpenAI API key or runtime `node_modules`.
+- [x] The active conversation or pasted text can become one reviewed Markdown card.
+- [x] The user controls title, categories, Summary, Detail, evidence, sources, and connections before saving.
+- [x] The card contains one concise Summary and one substantially more concrete paraphrased Detail, with no Key Concepts, My Understanding, or Annotations section.
+- [x] Markdown/LaTeX formulas render in review and remain Obsidian-compatible after saving.
+- [x] Evidence is concise, paraphrased, and tied to original source material rather than copied from the dialogue.
+- [x] The vault is the only durable knowledge database.
+- [x] Search and link suggestions work locally without embeddings.
+- [x] Existing cards cannot be overwritten by capture.
+- [x] Path traversal and symlink escape cannot write outside the configured cards directory.
+- [x] Inquiries cite cards and disclose insufficient evidence.
+- [x] The installed plugin works without an OpenAI API key or runtime `node_modules`.
 
 ## Deferred beyond v1
 
@@ -210,4 +216,4 @@ Last updated: 2026-09-06T17:48:56-04:00
 
 ## Current next action
 
-Begin Stage 6 in a separate development turn: run installed-plugin validation, register and install the repository marketplace, and verify capture/inquiry behavior in fresh Codex and Obsidian workflows.
+Patchouli personal v1 is complete. Use it from a new Codex task with `$patchouli` or a focused natural-language capture/inquiry request; pursue deferred ingestion and cross-platform work only as later stages.

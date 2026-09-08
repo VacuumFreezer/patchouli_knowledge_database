@@ -2,6 +2,18 @@
 
 Patchouli records each cohesive source, configuration, test, UI, or skill edit batch here. Entries use an ISO-8601 timestamp with the America/New_York UTC offset and briefly state motivation and changes. Bookkeeping-only updates to this file or `PROGRESS.md` do not require recursive entries.
 
+## 2026-09-08
+
+### 2026-09-08T13:22:16-04:00 — Document personal installation and Windows constraints
+
+- **Motivation:** Make the validated personal release reproducible and set accurate expectations for local plugin caching, vault registration, and Obsidian automation.
+- **Changes:** Added the marketplace/install/new-task workflow plus native-Windows, single-vault, conversational fallback, Markdown/MathJax, Obsidian vault-registration, and CLI-version notes.
+
+### 2026-09-08T12:56:24-04:00 — Make MCP error schemas portable
+
+- **Motivation:** MCP Inspector strict validation found that free-form error-detail values were emitted as untyped schemas across all eight tools.
+- **Changes:** Constrained structured error details to JSON values and added a protocol regression that rejects untyped detail schemas.
+
 ## 2026-09-06
 
 ### 2026-09-06T17:44:32-04:00 — Implement the Patchouli agent workflow

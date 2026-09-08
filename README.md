@@ -141,6 +141,32 @@ pnpm inspect:mcp
 
 The production plugin bundles the MCP server and review component. Its Windows launcher locates the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin does not require development dependencies.
 
+## Personal installation
+
+From the repository root, register the repository marketplace and install Patchouli:
+
+```powershell
+codex plugin marketplace add D:\Codex\workspaces\patchouli_knowledge_database
+codex plugin add patchouli@personal
+```
+
+Start a new Codex task after installation so it loads the newly enabled skill and bundled MCP server. In that task, ask Patchouli to configure an existing absolute vault path and optionally a relative cards directory:
+
+```text
+Configure Patchouli to use D:\path\to\my-vault with cards in Patchouli.
+```
+
+Then use either `$patchouli` or a focused natural-language request to capture or query knowledge. A capture always stops for review before the write. Local marketplace installs run from Codex's plugin cache, so reinstall the plugin after changing a packaged source, skill, UI, or distributable.
+
+## Windows and Obsidian notes
+
+- V1's bundled launcher targets native Windows. WSL, macOS, and Linux launchers remain out of scope.
+- Patchouli keeps exactly one active vault configuration at `%APPDATA%\Patchouli\configuration.json`; configuring another vault replaces that pointer but never edits or removes cards in the previous vault.
+- Patchouli accepts an existing writable folder even when it is not registered with Obsidian. Register that folder through Obsidian's vault manager before expecting Obsidian URI links or UI automation to open it.
+- Obsidian renders the saved `$...$` and `$$...$$` notation with MathJax and derives backlinks from the saved wikilinks. Patchouli stores only the Markdown source.
+- Automated Obsidian CLI checks require the Obsidian 1.12.7-or-newer installer and the CLI option enabled. Older desktop builds can still read Patchouli cards, but vault registration and visual checks use the Obsidian UI.
+- When a host does not render the inline MCP App, Patchouli presents the same editable draft conversationally and still requires explicit confirmation.
+
 ## Development governance
 
 - Work on exactly one stage at a time.
