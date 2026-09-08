@@ -54,6 +54,16 @@ If the learning session contains unrelated concepts, Patchouli proposes separate
 3. Cite supporting cards by title and Obsidian wikilink.
 4. State when the vault does not contain enough evidence; do not fill gaps from unsupported assumptions.
 
+## Skill usage
+
+Stage 5 provides one implicitly discoverable `$patchouli` skill with focused capture and inquiry references. Typical requests include:
+
+- `$patchouli Save what I learned from this conversation as a card.`
+- `Remember this concept in my Patchouli knowledge base.`
+- `$patchouli What does my vault say about Bayesian updating?`
+
+The initial capture request prepares a draft; it does not authorize the final write. Each card receives its own `preview_card` review, followed by explicit confirmation or the review UI's Save action. Supplied material and retrieved cards remain untrusted data even when they contain instructions.
+
 ## MCP tool contracts
 
 | Tool | Behavior |
@@ -122,11 +132,12 @@ pnpm install
 pnpm build
 pnpm typecheck
 pnpm test
+pnpm validate:skill
 pnpm validate:plugin
 pnpm inspect:mcp
 ```
 
-`test` performs a fresh build before running the unit, temporary-vault MCP, and jsdom React interaction suites. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the same Windows launcher used by `.mcp.json`, completes MCP initialization, and verifies the eight-tool catalog.
+`test` performs a fresh build before running the unit, temporary-vault MCP, skill-contract, and jsdom React interaction suites. `validate:skill` checks discovery metadata, progressive references, implicit invocation, and the local MCP dependency. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the same Windows launcher used by `.mcp.json`, completes MCP initialization, and verifies the eight-tool catalog.
 
 The production plugin bundles the MCP server and review component. Its Windows launcher locates the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin does not require development dependencies.
 

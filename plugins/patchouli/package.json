@@ -10,6 +10,7 @@
     "build": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\build.mjs",
     "typecheck": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\node_modules\\typescript\\bin\\tsc --noEmit",
     "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\test.mjs",
+    "validate:skill": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\validate-skill.mjs",
     "verify:bundle": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\verify-bundle.mjs",
     "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs"
   },

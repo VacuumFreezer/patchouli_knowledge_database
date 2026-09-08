@@ -2,6 +2,13 @@
 
 Patchouli records each cohesive source, configuration, test, UI, or skill edit batch here. Entries use an ISO-8601 timestamp with the America/New_York UTC offset and briefly state motivation and changes. Bookkeeping-only updates to this file or `PROGRESS.md` do not require recursive entries.
 
+## 2026-09-06
+
+### 2026-09-06T17:44:32-04:00 — Implement the Patchouli agent workflow
+
+- **Motivation:** Make the reviewed local card engine reliably usable through both explicit and natural-language capture and inquiry requests.
+- **Changes:** Added one discoverable `patchouli` skill with focused capture/inquiry references, local MCP dependency metadata, prompt-injection and transcript boundaries, single-card review and confirmation rules, evidence-backed inquiry behavior, a reusable skill validator, scenario-oriented contract tests, and README usage commands.
+
 ## 2026-09-04
 
 ### 2026-09-04T14:08:16-04:00 — Keep Markdown review local

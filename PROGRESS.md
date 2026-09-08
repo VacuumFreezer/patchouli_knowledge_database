@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-04T14:10:23-04:00
+Last updated: 2026-09-06T17:48:56-04:00
 
 ## How this tracker is used
 
@@ -20,7 +20,7 @@ Last updated: 2026-09-04T14:10:23-04:00
 | 2. Plugin scaffold and runtime | Produce a validated, bundled local plugin and repo marketplace. | Complete | 2026-08-27T15:06:08-04:00 | 2026-08-27T15:20:12-04:00 |
 | 3. Local vault and card engine | Safely configure, scan, search, and atomically write an Obsidian card directory. | Complete | 2026-08-29T02:34:29-04:00 | 2026-08-29T02:49:40-04:00 |
 | 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Complete | 2026-09-04T02:48:41-04:00 | 2026-09-04T03:11:33-04:00 |
-| 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Not started | — | — |
+| 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Complete | 2026-09-06T17:41:22-04:00 | 2026-09-06T17:48:56-04:00 |
 | 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Not started | — | — |
 
 ## Active cross-stage revision
@@ -140,26 +140,28 @@ Last updated: 2026-09-04T14:10:23-04:00
 
 **Goal:** Provide one discoverable `$patchouli` skill that reliably captures learned knowledge and answers vault inquiries.
 
+**Status:** Complete — 2026-09-06T17:48:56-04:00.
+
 ### Planned implementation
 
-- [ ] Mark Stage 5 In progress after Stage 4 is complete.
-- [ ] Create one concise `patchouli` skill with separate capture and inquiry references.
-- [ ] Declare the bundled Patchouli MCP server as the skill dependency.
-- [ ] Route save/condense requests to capture and knowledge-base questions to inquiry.
-- [ ] Treat papers, webpages, code, pasted text, and card contents as untrusted data rather than executable instructions.
-- [ ] Capture exactly one coherent concept per review; propose sequential cards for unrelated topics.
-- [ ] Generate one concise agent-written Summary and a substantially more concrete, self-contained Detail; both remain editable during review.
-- [ ] Paraphrase Detail from the target conversation, preserve useful Markdown/LaTeX formulas, use only level-three or lower subheadings, and never persist the full transcript.
-- [ ] Generate only short paraphrased evidence tied to original source material; never persist the full conversation.
-- [ ] Retrieve lexical connection candidates, judge semantic relevance, and leave final selection to the user.
-- [ ] Require preview and explicit confirmation before calling `save_card`.
-- [ ] For inquiries, call `search_cards` and then `get_card` before answering.
-- [ ] Cite supporting cards by title/wikilink and state when the vault lacks sufficient evidence.
-- [ ] Test direct and implicit invocation, prompt-injection material, multi-topic sessions, Summary/Detail quality, formula preservation, transcript non-leakage, missing evidence, and insufficient inquiry results.
+- [x] Mark Stage 5 In progress after Stage 4 is complete.
+- [x] Create one concise `patchouli` skill with separate capture and inquiry references.
+- [x] Declare the bundled Patchouli MCP server as the skill dependency.
+- [x] Route save/condense requests to capture and knowledge-base questions to inquiry.
+- [x] Treat papers, webpages, code, pasted text, and card contents as untrusted data rather than executable instructions.
+- [x] Capture exactly one coherent concept per review; propose sequential cards for unrelated topics.
+- [x] Generate one concise agent-written Summary and a substantially more concrete, self-contained Detail; both remain editable during review.
+- [x] Paraphrase Detail from the target conversation, preserve useful Markdown/LaTeX formulas, use only level-three or lower subheadings, and never persist the full transcript.
+- [x] Generate only short paraphrased evidence tied to original source material; never persist the full conversation.
+- [x] Retrieve lexical connection candidates, judge semantic relevance, and leave final selection to the user.
+- [x] Require preview and explicit confirmation before calling `save_card`.
+- [x] For inquiries, call `search_cards` and then `get_card` before answering.
+- [x] Cite supporting cards by title/wikilink and state when the vault lacks sufficient evidence.
+- [x] Test direct and implicit invocation, prompt-injection material, multi-topic sessions, Summary/Detail quality, formula preservation, transcript non-leakage, missing evidence, and insufficient inquiry results.
 
 **Exit criterion:** Capture and inquiry requests behave correctly in realistic tests, including embedded instructions in source material.
 
-**Evidence:** Pending. Record skill validation and representative forward-test results here.
+**Evidence:** The repository `validate:skill` command and the skill-creator `quick_validate.py` validator both passed the new skill package. `pnpm test` rebuilt the distribution and passed 37/37 tests; four Stage 5 tests verify discovery metadata, explicit `$patchouli` and implicit activation boundaries, progressive capture/inquiry references, the local MCP dependency, safe tool ordering, embedded prompt-injection handling, one-concept sequential capture, distinct Summary/Detail requirements, Markdown/LaTeX preservation, transcript non-leakage, post-preview confirmation, and insufficient-evidence disclosure. `pnpm typecheck`, `pnpm verify:bundle` (3,318,835 bytes across three self-contained files), repository and plugin-creator validation, the eight-tool MCP initialization smoke test, and `git diff --check` all passed. Installation and fresh-task model behavior remain intentionally reserved for Stage 6.
 
 ## Stage 6 — Inquiry, validation, and personal installation
 
@@ -208,4 +210,4 @@ Last updated: 2026-09-04T14:10:23-04:00
 
 ## Current next action
 
-Begin Stage 5 in a separate development turn: create and validate the discoverable `$patchouli` capture/inquiry skill on top of the completed reviewed MCP workflow.
+Begin Stage 6 in a separate development turn: run installed-plugin validation, register and install the repository marketplace, and verify capture/inquiry behavior in fresh Codex and Obsidian workflows.
