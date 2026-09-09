@@ -208,17 +208,16 @@ export class VaultCardEngine {
   async getCard(cardRef: string): Promise<ParsedCard> {
     const configuration = await this.configurationStore.requireConfiguration();
     const normalizedRef = normalizeRelativePath(cardRef, "cardRef");
-    const cardsPrefix = `${configuration.cardsDirectory}/`.toLocaleLowerCase("en-US");
-    const foldedRef = normalizedRef.toLocaleLowerCase("en-US");
-    if (foldedRef !== configuration.cardsDirectory.toLocaleLowerCase("en-US") && !foldedRef.startsWith(cardsPrefix)) {
-      throw new PatchouliError("PATH_ESCAPE", "cardRef must remain inside the configured cardsDirectory.", {
-        cardRef,
-      });
-    }
+    const cardsRoot = await resolveContainedPath(configuration.vaultPath, configuration.cardsDirectory, {
+      fieldName: "cardsDirectory", mustExist: true,
+    });
     const resolved = await resolveContainedPath(configuration.vaultPath, normalizedRef, {
       fieldName: "cardRef",
       mustExist: true,
     });
+    if (!isPathInside(cardsRoot, resolved)) {
+      throw new PatchouliError("PATH_ESCAPE", "cardRef must remain inside the configured cardsDirectory.", { cardRef });
+    }
     const stats = await fs.stat(resolved);
     if (!stats.isFile() || !resolved.toLocaleLowerCase("en-US").endsWith(".md")) {
       throw new PatchouliError("NOT_FOUND", "cardRef does not identify a Markdown card.", { cardRef });
@@ -258,17 +257,21 @@ export class VaultCardEngine {
     }
     const normalizedDraft = normalizeCardDraft(draft);
     const derivedDestinationRef = path.posix.join(path.posix.dirname(target.cardRef), normalizedDraft.filename);
-    const destinationRef = derivedDestinationRef.toLocaleLowerCase("en-US") === target.cardRef.toLocaleLowerCase("en-US")
-      ? target.cardRef
-      : derivedDestinationRef;
+    let destinationRef = derivedDestinationRef;
     const destinationPath = await resolveContainedPath(configuration.vaultPath, destinationRef, {
       fieldName: "draft.title",
     });
     let collision = false;
-    if (destinationRef.toLocaleLowerCase("en-US") !== target.cardRef.toLocaleLowerCase("en-US")) {
+    if (destinationRef !== target.cardRef) {
       try {
-        await fs.lstat(destinationPath);
-        collision = true;
+        const destinationStats = await fs.stat(destinationPath);
+        const targetPath = await resolveContainedPath(configuration.vaultPath, target.cardRef, { mustExist: true });
+        const targetStats = await fs.stat(targetPath);
+        // Preserve the current filename when the volume resolves a case/Unicode alias
+        // to the same file. On case-sensitive volumes a distinct file is a collision.
+        if (destinationStats.dev === targetStats.dev && destinationStats.ino === targetStats.ino) {
+          destinationRef = target.cardRef;
+        } else collision = true;
       } catch (error: unknown) {
         if (!isNodeError(error) || error.code !== "ENOENT") throw error;
       }

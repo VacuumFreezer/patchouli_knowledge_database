@@ -3,6 +3,7 @@ export * from "./checkpoints.js";
 export * from "./configuration.js";
 export * from "./errors.js";
 export * from "./paths.js";
+export * from "./platform.js";
 export * from "./search.js";
 export * from "./transcript.js";
 export * from "./types.js";

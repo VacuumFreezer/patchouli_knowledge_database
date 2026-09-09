@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { normalizeCardDraft } from "./cards.js";
 import { PatchouliError, isNodeError } from "./errors.js";
+import { getApplicationDataDirectory } from "./platform.js";
 import type {
   CardDraft,
   CheckpointDraft,
@@ -35,12 +35,27 @@ export interface ReplaceCheckpointInput {
 }
 
 export function defaultCheckpointRoot(): string {
-  const applicationData = process.env.APPDATA?.trim();
-  return process.env.PATCHOULI_CHECKPOINT_ROOT?.trim()
-    || path.join(applicationData || path.join(os.homedir(), "AppData", "Roaming"), "Patchouli", "session-checkpoints");
+  const override = process.env.PATCHOULI_CHECKPOINT_ROOT?.trim();
+  if (override && !path.isAbsolute(override)) {
+    throw new PatchouliError("CONFIGURATION_INVALID", "PATCHOULI_CHECKPOINT_ROOT must be an absolute directory.");
+  }
+  return override || path.join(getApplicationDataDirectory(), "session-checkpoints");
 }
 
-export function currentPatchouliSessionId(): string {
+export function currentPatchouliSessionId(requestMeta?: Record<string, unknown>): string {
+  // Codex can share one MCP process between tasks; request context is authoritative.
+  const turn = requestMeta?.["x-codex-turn-metadata"];
+  const turnMeta = typeof turn === "object" && turn !== null
+    ? turn as Record<string, unknown> : undefined;
+  const identifiers = [requestMeta?.threadId, turnMeta?.thread_id, turnMeta?.session_id]
+    .filter((value) => value !== undefined);
+  if (identifiers.length > 0) {
+    if (identifiers.some((value) => typeof value !== "string" || !value.trim())
+      || new Set(identifiers.map((value) => (value as string).trim())).size !== 1) {
+      throw new PatchouliError("SESSION_CONTEXT_MISSING", "The host supplied inconsistent or invalid task identifiers.");
+    }
+    return (identifiers[0] as string).trim();
+  }
   const sessionId = process.env.PATCHOULI_SESSION_ID?.trim()
     || process.env.CODEX_SESSION_ID?.trim()
     || process.env.CODEX_THREAD_ID?.trim();
@@ -252,7 +267,7 @@ export class CheckpointStore {
 
   async #write(sessionId: string, state: SessionState): Promise<void> {
     const directory = this.#directory(sessionId);
-    await fs.mkdir(directory, { recursive: true });
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 });
     const temporary = path.join(directory, `.state-${randomUUID()}.tmp`);
     try {
       const serialized = `${JSON.stringify(state, null, 2)}\n`;
@@ -271,7 +286,7 @@ export class CheckpointStore {
   async #withLock<T>(sessionId: string, action: () => Promise<T>): Promise<T> {
     const directory = this.#directory(sessionId);
     const lock = path.join(directory, ".lock");
-    await fs.mkdir(directory, { recursive: true });
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 });
     for (let attempt = 0; attempt < 40; attempt += 1) {
       try {
         await fs.mkdir(lock);

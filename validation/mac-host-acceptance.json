@@ -1,0 +1,109 @@
+{
+  "recordedAt": "2026-09-09T14:45:58.888113+00:00",
+  "installedVersion": "0.2.0+codex.20260909142257",
+  "hostTaskId": "01a0868d-6bd3-7212-90f9-9977e15f754d",
+  "syntheticDataOnly": true,
+  "lifecycle": {
+    "hostPreCompactDrafts": 2,
+    "cardsBeforeAndAfterCompaction": 2,
+    "sessionEndDeactivatedCapture": true,
+    "sessionEndPreservedExactDraftObjects": true,
+    "sameTaskReopenRecoveredBothDrafts": true,
+    "draftsAfterConfirmedUpdate": 1,
+    "remainingBinaryDraftUnchanged": true,
+    "draftsAfterConfirmedNewCard": 0,
+    "finalCardCount": 3
+  },
+  "confirmedUpdate": {
+    "savedCard": "Patchouli/Arithmetic series.md",
+    "exactReviewedBody": true,
+    "categoriesMatch": true,
+    "selectedConnectionSaved": true,
+    "savedRevision": "4b280f56eb79d6f21242fb62fe33c4a6da28bcf2439a432b7a9d44472b72f6e5",
+    "matchesUpdateResult": true,
+    "stableIdPreserved": true,
+    "createdAtPreserved": true,
+    "remainingCheckpointCount": 1,
+    "draftCount": 1,
+    "binaryCheckpointUnchanged": true,
+    "arithmeticCheckpointConsumed": true,
+    "captureActive": false
+  },
+  "confirmedCreateAndRetry": {
+    "cardRead": "Patchouli/Binary search and the candidate interval.md",
+    "exactReviewedBody": true,
+    "categories": [
+      "Algorithms"
+    ],
+    "connections": [],
+    "idempotentReplay": true,
+    "sameIdAcrossSaveRetryAndRead": true,
+    "unchangedMarkdownAfterRetry": true,
+    "searchSuccessful": true,
+    "matchingCards": [
+      {
+        "cardRef": "Patchouli/Binary search and the candidate interval.md",
+        "title": "Binary search and the candidate interval",
+        "categories": [
+          "Algorithms"
+        ],
+        "score": 104,
+        "matchedFields": [
+          "body",
+          "title"
+        ],
+        "excerpt": "Binary search and the candidate interval Summary Binary search locates a target in a sorted array by maintaining an interval containing every remaining possible target location. Each unsuccessful midpoint comparison roug…"
+      }
+    ],
+    "checkpointReadSuccessful": true,
+    "retainedDrafts": [],
+    "checkpointCount": 0,
+    "captureActive": false,
+    "absencePassage": "A matching midpoint ends the search successfully. If the interval becomes empty without a match, the target is absent: no possible target location remains.\n\nEach unsuccessful step roughly halves the number of candidates. Repeated halving reduces an array of $n$ elements to at most one candidate after a logarithmic number of steps, so binary search uses $O(\\log n)$ comparisons. An initially empty array immediately yields absence."
+  },
+  "installedRestartIsolation": [
+    {
+      "serverProcess": 1,
+      "tools": 15,
+      "configurationPersisted": true,
+      "freshTaskActive": false,
+      "freshTaskDrafts": 0
+    },
+    {
+      "serverProcess": 2,
+      "tools": 15,
+      "configurationPersisted": true,
+      "freshTaskActive": false,
+      "freshTaskDrafts": 0
+    }
+  ],
+  "syntheticCardSha256BeforeCleanup": {
+    "Binary search and the candidate interval.md": "69d56229bd3de3a1d97c6b2683ce782a2f70b23b126e5259f794ceee9c9eb454",
+    "Pairing terms.md": "927bdbf8295c336e5362f8cb8a0e1a58febb53625ee66ef1f4d3ddb52bb75b63",
+    "Arithmetic series.md": "4b280f56eb79d6f21242fb62fe33c4a6da28bcf2439a432b7a9d44472b72f6e5"
+  },
+  "visualAcceptance": {
+    "reviewSurface": "Actual bundled MCP App in local browser harness",
+    "obsidian": "Native macOS Obsidian 1.13.7, isolated profile and synthetic vault",
+    "observations": [
+      "create, update/rename, validation error, cancel",
+      "rendered inline/display math and card properties",
+      "selected outgoing wikilink and one derived backlink"
+    ],
+    "codexReviewSurface": "Actual installed CLI task using full conversational fallback"
+  },
+  "coverageLimits": [
+    "No native Windows runner",
+    "No Intel Mac execution",
+    "Codex native inline rendering not asserted; bundled UI exercised in browser harness"
+  ],
+  "cleanup": {
+    "syntheticReviewVaultsRemoved": true,
+    "reviewServersStopped": true,
+    "temporaryObsidianRemoved": true,
+    "caseSensitiveVolumeDetachedAndImageRemoved": true,
+    "realDefaultConfigurationAbsent": true,
+    "realDefaultCheckpointsAbsent": true,
+    "disposableExecutionLogsKeptUnderTmp": true
+  }
+}

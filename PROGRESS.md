@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-09T02:01:57-04:00
+Last updated: 2026-09-09T15:30:16-04:00
 
 ## How this tracker is used
 
@@ -23,6 +23,8 @@ Last updated: 2026-09-09T02:01:57-04:00
 | 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Complete | 2026-09-06T17:41:22-04:00 | 2026-09-06T17:48:56-04:00 |
 | 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Complete | 2026-09-08T12:41:10-04:00 | 2026-09-08T13:24:42-04:00 |
 | 7. Compaction-safe capture and card evolution | Update existing cards and preserve pre-compaction technical detail through explicitly launched checkpoint drafts. | Complete | 2026-09-08T15:40:04-04:00 | 2026-09-08T16:58:18-04:00 |
+| 8. mac build — source and parity tests | Build macOS support and verify the complete Windows feature set before registration or installation. | Complete | 2026-09-09T02:54:11-04:00 | 2026-09-09T10:22:45-04:00 |
+| 9. mac build — registration and installation | Register, install, and verify the tested plugin in Codex and Obsidian on this Mac. | Complete | 2026-09-09T10:01:25-04:00 | 2026-09-09T10:46:22-04:00 |
 
 ## Active cross-stage revision
 
@@ -261,7 +263,7 @@ The personal marketplace remained `personal`; `patchouli@personal` `0.2.0+codex.
 - PDF, webpage, repository/code, Xiaohongshu, and YouTube ingestion pipelines.
 - Multiple saved vault profiles.
 - Hosted MCP, authentication, vector search, and cloud synchronization.
-- macOS, Linux, and WSL launcher support.
+- Linux and WSL launcher support. macOS support is now planned in the mac build stages below.
 
 ## Stage 7 follow-up — Retain unsaved checkpoint drafts
 
@@ -273,6 +275,106 @@ The personal marketplace remained `personal`; `patchouli@personal` `0.2.0+codex.
 
 **Installation:** The earlier cache activation attempts encountered Windows access denial. Follow-up verification at 2026-09-09T01:57:35-04:00 confirmed that `codex plugin list` now reports `0.2.0+codex.20260909054855` installed and enabled, and the current task's skill catalog references that version. SHA-256 comparisons of the installed Hook, core, server, hook configuration, and launch reference all match the verified repository artifacts. The activation blocker is resolved; no further reinstall was needed.
 
-## Current next action
+## Latest Windows baseline
 
 Use installed version `0.2.0+codex.20260909060138`, confirmed enabled at 2026-09-09T02:01:57-04:00. The second Hook now uses `Discard draft` as its supported `statusMessage`; `SessionEnd` remains its lifecycle event. Repository and canonical plugin validation passed, the installed label was checked, and its runtime hash matches the tested retention fix. Review/trust the updated Hook if Codex prompts; session end still stops capture while retaining outstanding drafts for later reviewed capture in the same task.
+
+## mac build
+
+**Scope:** Bring the complete implemented Windows feature set to native macOS, including Stage 7 and the subsequent unsaved-checkpoint retention fix. Preserve the existing Windows implementation and Markdown format. The current input boundary is the active Codex conversation or supplied text/Markdown; this port does not add a separate ChatGPT-history import pipeline.
+
+**Planning record:** Source, MCP contracts, review UI, hooks, launchers, build/validation scripts, skill references, and all nine existing test files have been read. The initial planning update changed only `PROGRESS.md`. Implementation of Stages 8 and 9 was subsequently authorized; current status and evidence are recorded below. The previously recorded 46 passing tests are Windows evidence, not Mac validation.
+
+**Sequence:** Complete Stage 8 and record its pre-installation acceptance evidence before starting Stage 9. Registration and installation are not a way to bypass failing source or parity tests. Any runtime or packaging changes made during Stage 9 must pass the affected Stage 8 checks before reinstalling.
+
+### Function inventory and parity baseline
+
+| Function group | Existing implementation | Behavior to preserve on macOS |
+| --- | --- | --- |
+| Vault configuration | `src/core/configuration.ts`, `src/core/paths.ts`; `get_configuration`, `configure_vault` | One existing writable vault; relative cards directory; persisted configuration outside the vault; non-fatal missing-Obsidian warning; traversal and symlink protection. |
+| Cards and local retrieval | `src/core/cards.ts`, `src/core/search.ts`, `src/core/vault.ts`; `list_categories`, `search_cards`, `get_card` | Defensive YAML/Markdown parsing, legacy-card reads, disposable lexical index, deterministic ranking/filtering, category counts, and vault-relative references. |
+| Connections and inquiry | `suggest_links`; capture/update/inquiry skill references | Use title, categories, Summary, and Detail for lexical candidates; judge relevance; save selected outgoing wikilinks; let Obsidian derive backlinks; search and read supporting cards before answering with citations or an evidence-gap statement. |
+| Reviewed new-card capture | `src/mcp/register-tools.ts`, `src/mcp/schemas.ts`, `src/mcp/pending-previews.ts`; `preview_card`, `save_card` | One coherent concept per review, editable Summary/Detail/evidence/sources/connections, explicit confirmation, expiring tokens, idempotent retries, atomic create without overwriting collisions. |
+| Reviewed card evolution | Card preservation and vault update code; `preview_card_update`, `update_card` | Preserve UUID, creation time, custom frontmatter and sections; add update time; check exact revisions; handle title-derived renames, collisions, failure cleanup, and unrelated-card preservation. |
+| Task capture lifecycle | `src/core/checkpoints.ts`; `launch_patchouli`, `get_patchouli_status`, `stop_patchouli`, `get_checkpoint_drafts`, `discard_checkpoint_drafts` | Explicit task-scoped launch with the existing visible acknowledgement; bounded private drafts; selective discard/consumption; restart isolation; stop and session end retain unsaved drafts by default. |
+| Pre-compaction synthesis | `src/hook.ts`, `src/core/transcript.ts`, `hooks/` | `PreCompact` runs only for launched tasks; use the signed-in Codex account without a separate API key; parse user/assistant text as untrusted data; preserve paraphrased detail and formulas; produce no vault write or review token; continue with a content-free warning on failure. |
+| Review interface and distribution | `src/ui/`, `src/server.ts`, `.mcp.json`, `scripts/`, plugin manifest and skill metadata | Editable create/update UI, live Markdown/KaTeX, Save/Update/Cancel and accessible errors, conversational fallback, all 15 typed MCP tools, and four self-contained distributables without runtime `node_modules`. |
+
+Paths in this inventory are relative to `plugins/patchouli` unless otherwise stated. The parity baseline is the current source and its tests, including the latest retention behavior where older completed-stage notes describe draft cleanup.
+
+### Stage 8 — mac build: source and parity tests
+
+**Status:** Complete — reaccepted 2026-09-09T10:22:45-04:00 after correcting request-scoped task identity and validating shared-server isolation. Initial acceptance and the installed-host finding are documented in the evidence.
+
+**Goal:** Produce a macOS-capable source tree and distributable with the same functions as the Windows baseline, and validate it thoroughly before any marketplace registration or plugin installation.
+
+#### Planned implementation
+
+- [x] Mark Stage 8 In progress and record the source revision, macOS version, CPU architecture, filesystem characteristics, Codex/Node/pnpm versions, and available Obsidian version. Verify the installed Mac host's supported MCP launch configuration, hook events, CLI synthesis options, and runtime locations before choosing the platform wiring.
+- [x] Keep shared TypeScript logic and the existing public tool contracts. Choose a host-supported cross-platform launcher/configuration strategy, or explicitly generated platform packages if required; do not assume undocumented manifest fields or remove Windows support.
+- [x] Add Mac MCP and hook runtime launchers that discover supported Codex-provided Node/CLI executables and use documented fallbacks. Handle GUI-launched Codex with a minimal `PATH`, spaces and Unicode in paths, argument quoting, executable permissions, exit codes, signals, and clean MCP stdout.
+- [x] Make root/plugin package commands, MCP smoke scripts, scaffold checks, and plugin validation work on Mac while preserving Windows entry points. Check the declared runtime minimum against the actual build/test dependencies and document any distinct development prerequisite.
+- [x] Introduce consistent platform-aware application-data resolution for configuration and checkpoint storage. Plan Mac defaults under `~/Library/Application Support/Patchouli/`, with `configuration.json` and `session-checkpoints`; preserve Windows `%APPDATA%` behavior and existing test overrides. MCP and hooks must resolve the same store, with private file permissions and no vault-resident state.
+- [x] Audit `paths.ts` and `vault.ts` for POSIX paths, realpath containment, macOS case sensitivity, Unicode normalization, and filename byte limits. In particular, review unconditional lowercasing in card-directory checks and update destination comparisons. Retain portable title-derived filenames and prevent reads or writes outside the configured cards directory.
+- [x] Verify atomic create, replacement, rename, revision checks, and rollback on the Mac filesystem. Correct any portability failures without weakening collision protection or losing manual edits.
+- [x] Wire both `PreCompact` and `SessionEnd` through the Mac runtime. Preserve task identity, duplicate/out-of-order handling, bounded checkpoints, content-free failure warnings, and the latest rule that session end deactivates capture while retaining drafts.
+- [x] Adapt test fixtures to isolate Mac configuration, checkpoint state, and temporary vaults without modifying real user settings. Replace Windows-only assertions with explicit platform cases while retaining the original behavioral coverage.
+- [x] Rebuild `dist/server.mjs`, `dist/core.mjs`, `dist/hook.mjs`, and `dist/review-app.html`; update Mac/Windows setup documentation and record implementation batches in `CHANGELOG.md` when implementation begins.
+
+#### Required pre-installation test coverage
+
+- [x] **Full regression baseline:** Run all 46 existing test cases on Mac after adapting platform assumptions, plus new regression cases. Preserve coverage across cards, paths, search, vault integration, MCP integration, Stage 7 lifecycle, UI, scaffold, and skill tests; do not silence a platform failure by dropping its behavior check.
+- [x] **Runtime and packaging:** Exercise actual Mac MCP/hook launchers from both the source tree and an isolated copy of the distributable without `node_modules`. Cover runtime overrides, missing/stale runtime paths, fallback discovery, minimal `PATH`, non-repository working directories, spaces/Unicode in installation paths, process termination, and stderr-only startup failures.
+- [x] **Configuration and permissions:** Cover first use without `APPDATA`, the Mac application-data default, shared MCP/hook resolution, Windows resolution as an explicit platform case, configuration reload/replacement, malformed configuration, missing or unwritable vaults/directories, and the missing `.obsidian` warning. Assert that tests do not create configuration or checkpoints in the user's real application-data directory.
+- [x] **Mac paths and filenames:** Cover nested paths, spaces, Chinese text, emoji, composed/decomposed Unicode, long UTF-8 filenames, POSIX/Windows absolute-path rejection, traversal, file/directory symlink escapes, and cards-directory boundaries. Exercise case-insensitive and case-sensitive volume behavior using isolated volumes where needed, including case-only renames and sibling directories differing only by case.
+- [x] **Card/search/link parity:** Compare deterministic fixtures with the Windows baseline for card sections, metadata, selected wikilinks, category counts, ranking, excerpts, filters, limits, legacy/malformed cards, and inline/display formulas. Fix IDs/timestamps for comparisons and normalize only intentional platform differences such as absolute roots or line endings.
+- [x] **Write and update safety:** Cover duplicate creation and collision races, concurrent requests, stale previews after manual edits, create/update token separation, invalid/expired/consumed tokens, identical retries, rename collisions, UUID/creation-time preservation, custom metadata/sections, injected write/promotion failures, rollback, and temporary-file cleanup. Assert original and unrelated files remain unchanged on rejected operations.
+- [x] **All 15 MCP tools:** Initialize through the actual Mac launcher; exercise every tool with representative valid and invalid inputs, missing configuration/session context, empty results, schemas, annotations, structured errors, and review-resource delivery. Include real calls to stop/status/discard tools, not just catalog assertions. Run MCP Inspector validation against the staged bundle before installation.
+- [x] **Review UI and conversational fallback:** Exercise edits to every field, connection selection, live Markdown/KaTeX, keyboard interaction, Save/Update/Cancel, validation feedback, collisions/conflicts, bridge failures and retry behavior. Verify no write occurs before confirmation, cancellation retains drafts, and the complete review remains usable without inline UI. Supplement jsdom checks with a rendered review in a Mac browser or supported local host harness.
+- [x] **Checkpoint and transcript lifecycle:** Cover inactive tasks, repeated launch, auto/manual compaction payloads, repeated/out-of-order events, multiple topics, simultaneous tasks, process restart, stop/relaunch, repeated session end, retained draft identities, selective successful consumption, and cancellation/write/conflict retention. Cover corrupt/oversized state, lock contention, malformed transcripts, ambient-context stripping, untrusted instructions, missing executables, synthesis failure/timeouts, and content-free warnings. Assert hooks never create cards or review tokens.
+- [x] **Complete workflow and real synthesis:** In isolated state, run `launch → checkpoint → continued conversation → reviewed existing-card update → separately reviewed new card → selected connection → search/read inquiry`, including an insufficient-evidence inquiry. Run a real signed-in Codex synthesis against a tiny generated transcript from the staged hook, with no vault configured for that smoke test. Verify the staged cards' Markdown/math, outgoing links and derived backlinks in Mac Obsidian before installation. Keep deterministic fixture results separate from actual model and visual evidence.
+- [x] **Windows compatibility:** Retain explicit tests for Windows configuration and launch contracts; compare shared behavior against fixed Windows reference fixtures. Run native Windows regression checks when a runner is available and record their provenance; simulated Windows cases on Mac are not a native Windows run. Record the tested Mac architecture without claiming other architectures were exercised.
+
+#### Acceptance gate and evidence
+
+- [x] Pass the Mac-compatible `pnpm typecheck`, `pnpm build`, `pnpm test`, `pnpm validate:skill`, `pnpm validate:plugin`, `pnpm verify:bundle`, `pnpm inspect:mcp`, and `pnpm inspect:hook` commands, plus canonical plugin/skill validation, the additional Mac tests above, and `git diff --check`.
+- [x] Record command lines, environment, test totals, results, failure resolutions, fixture/model/UI distinctions, and any unavailable platform coverage. Explain every skip; an unverified required Mac function keeps this stage open. Record the tested source revision or diff and SHA-256 hashes of the final distributables and relevant launch/config/skill files.
+- [x] Mark Stage 8 Complete only after the required Mac checks pass and the evidence is recorded. Keep registration and installation untouched throughout Stage 8.
+
+**Exit criterion:** The staged plugin builds and runs natively on this Mac, all 15 tools and all Windows feature groups pass the pre-installation parity checks, the bundle works without development dependencies, and there are no unresolved required Mac test failures. Real installed-host activation and lifecycle delivery remain the Stage 9 checks.
+
+**Evidence:** [Mac build acceptance](validation/mac-build.md) records 70/70 passing tests on each of case-insensitive and case-sensitive APFS, all 15 MCP tools, canonical validators, self-contained bundles, actual browser review, native Obsidian math/backlink inspection, real signed-in checkpoint synthesis and supported/insufficient-evidence inquiries. [Accepted file hashes](validation/mac-build-sha256.json) identify the tested source and artifacts before registration. No tests were skipped; native Windows and Intel Mac execution were unavailable and are not claimed. Registration and installation were untouched until this gate passed.
+
+### Stage 9 — mac build: registration and installation on this Mac
+
+**Status:** Complete — 2026-09-09T10:46:22-04:00. Final installed version `0.2.0+codex.20260909142257` is enabled; installed-host lifecycle, reviewed writes, inquiry, and isolation checks passed.
+
+**Goal:** Register and install the verified Mac package, then prove the installed copy works in this Mac's Codex and Obsidian environment.
+
+#### Planned registration and installation
+
+- [x] Check the Stage 8 evidence and hashes before making installation changes. Inspect this Mac's existing plugin/marketplace state, validate the plugin and marketplace names with supported helpers, and resolve any existing `personal` marketplace collision without overwriting unrelated registrations.
+- [x] Confirm that the selected local marketplace points at this repository's verified plugin. For the existing repository marketplace, register `/Users/tongshen/projects/patchouli_knowledge_database` through the supported Codex marketplace command when it is not already registered. Use the validated marketplace name rather than assuming the Windows registration exists on this Mac.
+- [x] If cache invalidation is required, use the plugin-creator cachebuster helper, preserving the base version. Revalidate the resulting manifest, install or reinstall with the supported `codex plugin add` flow, and verify that the plugin is enabled. Do not hand-edit installed caches or unrelated Codex configuration.
+- [x] Record the installed version and resolved cache path. Compare installed bundle, launchers, MCP/hook configuration, schema, and skill/reference hashes with the accepted Stage 8 artifacts, accounting explicitly for any manifest-only cachebuster change.
+
+#### Installed-host verification
+
+- [x] Open a fresh Codex task so the installed skill, all 15 MCP tools, and hooks are loaded. Complete the host's hook trust flow if it is presented; record any required user action rather than reporting an untrusted hook as operational.
+- [x] Use an isolated acceptance vault to verify explicit `$patchouli` and natural-language capture/inquiry, the actual Mac review UI, conversational fallback, editing, cancellation, confirmed creation, confirmed update/rename, connection selection, and idempotent results.
+- [x] Verify the installed plugin's saved frontmatter, Summary/Detail, evidence, sources, inline/display math, outgoing wikilinks, and Obsidian-derived backlinks. Run supported and insufficient-evidence inquiries and confirm cited cards were actually read.
+- [x] Exercise real host lifecycle delivery after explicit launch: verify the visible acknowledgement, creation of private pre-compaction drafts with no automatic card write, capture after compaction, selective consumption after confirmation, and preservation after session end/reopening the same task. Confirm unlaunched tasks stay inactive and drafts are isolated between tasks.
+- [x] Verify configuration/checkpoint persistence across MCP restarts and a fresh task, while keeping task-specific drafts isolated. Rerun installed-copy MCP and real-hook smoke tests through the installed launchers without development dependencies.
+- [x] Restore any pre-existing vault configuration used during acceptance tests and remove only disposable test artifacts. Record Mac usage, installation/update instructions, installed-version evidence, screenshots or inspection results, and any actual host limitations. Update `PROGRESS.md` and `CHANGELOG.md` as appropriate.
+
+**Exit criterion:** The tested Mac plugin is registered, installed, enabled, and picked up by a fresh Codex task; capture, updates, connections, inquiry, inline/conversational review, and real checkpoint lifecycle behavior pass in the installed environment. Installed artifacts match the accepted source package, and no required function remains unverified.
+
+**Evidence:** [Mac acceptance report](validation/mac-build.md), [installed package identity](validation/mac-installation.json), and [asserted host results](validation/mac-host-acceptance.json). All 60 accepted plugin files other than the manifest-only cachebuster match the installed copy. A real host compaction produced two private drafts without saving cards; session end and reopening preserved both exactly. Confirmed update consumed one, separately confirmed creation consumed the other, and an identical save retry returned the same card without duplication. Two installed MCP restarts retained configuration while fresh task IDs saw no drafts. Native Obsidian and the bundled review UI passed visual checks; Codex CLI exercised conversational review, while the browser harness exercised the actual MCP App. Native Codex inline rendering, native Windows, and Intel Mac execution are not claimed. Temporary vaults, servers, Obsidian app/profile, and the case-sensitive test volume were cleaned up; disposable execution logs remain under temporary storage. No personal vault was configured or modified.
+
+## Current next action
+
+Stages 8 and 9 are complete. The subsequent Engineering smoke test passed its 11 MCP checks; its visual coverage and limits are in `validation/engineering-smoke-2026-09-09.md`.
+
+**Specified-folder correction complete — 2026-09-09T15:30:16-04:00:** Use the user's named card folder directly, without appending `Patchouli`. Both smoke cards now live directly in `/Users/tongshen/Koumakan_Library/Engineering`, with identical content hashes, identities and links. The empty nested folder was removed, and MCP persisted `cardsDirectory: "Engineering"`. The clarified skill is installed and enabled as `0.2.0+codex.20260909192920`; 12 targeted tests, repository/canonical validators, installed hashes, and actual installed configuration/search/read checks passed. This is a skill/configuration correction; the accepted runtime bundles are unchanged. Evidence: `validation/engineering-folder-correction.json`.
+
+Start a fresh Codex task to load the updated plugin guidance. The vault is already configured; use `$patchouli launch` when you want pre-compaction capture for that task.

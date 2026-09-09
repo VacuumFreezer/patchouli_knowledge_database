@@ -67,6 +67,7 @@ export class PendingPreviewStore<T, M = undefined> {
     pendingToken: string,
     draft: NormalizedCardDraft,
     writer: (metadata: M | undefined) => Promise<T>,
+    validateMetadata?: (metadata: M | undefined) => void,
   ): Promise<SaveResolution<T>> {
     if (typeof pendingToken !== "string" || !/^[A-Za-z0-9_-]{32,128}$/u.test(pendingToken)) {
       throw new PatchouliError("TOKEN_INVALID", "The pending preview token is invalid.");
@@ -80,6 +81,8 @@ export class PendingPreviewStore<T, M = undefined> {
       throw new PatchouliError("TOKEN_EXPIRED", "The pending preview token has expired. Preview the card again.");
     }
 
+    // Validate task and operation even for completed or concurrent retries.
+    validateMetadata?.(record.metadata);
     const digest = draftDigest(draft);
     if (record.saved) {
       if (record.saved.digest !== digest) {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { link, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { link, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -44,8 +44,9 @@ test("configures a writable vault, warns without Obsidian, and handles a missing
 
 test("replaces the single active vault configuration atomically", async (context) => {
   const { engine, root, vault, configurationPath } = await fixture(context);
-  const secondVault = path.join(root, "second-vault");
-  await mkdir(secondVault);
+  const requestedSecondVault = path.join(root, "second-vault");
+  await mkdir(requestedSecondVault);
+  const secondVault = await realpath(requestedSecondVault);
   await engine.configureVault({ vaultPath: vault });
   const second = await engine.configureVault({ vaultPath: secondVault, cardsDirectory: "Cards" });
 

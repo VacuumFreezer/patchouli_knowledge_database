@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -47,6 +48,22 @@ function safeModel(value: unknown): string | undefined {
   return typeof value === "string" && /^[A-Za-z0-9._-]{1,128}$/u.test(value) ? value : undefined;
 }
 
+function codexCommand(): string {
+  if (process.env.CODEX_CLI_PATH?.trim()) return process.env.CODEX_CLI_PATH.trim();
+  const executable = process.platform === "win32" ? "codex.exe" : "codex";
+  const candidates = [
+    process.env.CODEX_ELECTRON_RESOURCES_PATH && path.join(process.env.CODEX_ELECTRON_RESOURCES_PATH, executable),
+    path.resolve(path.dirname(process.execPath), "..", "..", executable),
+    ...(process.platform === "darwin" ? [
+      "/Applications/Codex.app/Contents/Resources/codex",
+      "/Applications/ChatGPT.app/Contents/Resources/codex",
+      path.join(os.homedir(), "Applications/Codex.app/Contents/Resources/codex"),
+      path.join(os.homedir(), "Applications/ChatGPT.app/Contents/Resources/codex"),
+    ] : []),
+  ];
+  return candidates.find((candidate) => candidate && existsSync(candidate)) || "codex";
+}
+
 function checkpointPrompt(transcript: string, previousDrafts: CardDraft[]): string {
   return [
     "Create compact Patchouli checkpoint drafts from the supplied Codex conversation.",
@@ -84,7 +101,7 @@ async function runGenerator(prompt: string, model: string | undefined): Promise<
   const schemaPath = path.join(pluginRoot, "hooks", "checkpoint-drafts.schema.json");
   const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "patchouli-hook-"));
   const outputPath = path.join(temporaryDirectory, "drafts.json");
-  const command = process.env.CODEX_CLI_PATH?.trim() || "codex";
+  const command = codexCommand();
   const args = [
     "exec",
     "--ephemeral",
@@ -111,15 +128,22 @@ async function runGenerator(prompt: string, model: string | undefined): Promise<
         stdio: ["pipe", "ignore", "pipe"],
         env: { ...process.env, PATCHOULI_INTERNAL_CHECKPOINT: "1" },
       });
-      let stderr = "";
-      const timeout = setTimeout(() => child.kill(), 180_000);
-      child.stderr.on("data", (chunk) => {
-        if (stderr.length < 8_000) stderr += String(chunk);
-      });
-      child.on("error", reject);
-      child.on("exit", (code) => {
-        clearTimeout(timeout);
-        if (code === 0) resolve();
+      const testTimeout = process.env.NODE_ENV === "test" ? Number(process.env.PATCHOULI_HOOK_TIMEOUT_MS) : NaN;
+      const timeoutMs = Number.isFinite(testTimeout) && testTimeout > 0 ? testTimeout : 180_000;
+      let killTimeout: ReturnType<typeof setTimeout> | undefined;
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        child.kill();
+        killTimeout = setTimeout(() => child.kill("SIGKILL"), 1_000);
+      }, timeoutMs);
+      const cleanup = () => { clearTimeout(timeout); clearTimeout(killTimeout); };
+      child.stderr.resume();
+      child.stdin.on("error", () => undefined); // An exited generator can close stdin early.
+      child.on("error", (error) => { cleanup(); reject(error); });
+      child.on("close", (code) => {
+        cleanup();
+        if (code === 0 && !timedOut) resolve();
         else reject(new Error(`Codex checkpoint generation failed (${code ?? "signal"}).`));
       });
       child.stdin.end(prompt, "utf8");

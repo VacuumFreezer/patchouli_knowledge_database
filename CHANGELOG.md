@@ -4,6 +4,31 @@ Patchouli records each cohesive source, configuration, test, UI, or skill edit b
 
 ## 2026-09-09
 
+### 2026-09-09T15:27:32-04:00 — Honor an explicitly selected card folder
+
+- **Motivation:** The Engineering smoke test unnecessarily added a `Patchouli` subfolder to the user's selected destination.
+- **Changes:** Clarify the packaged skill and setup instructions: use the specified folder directly as `cardsDirectory`, without appending another folder. Move the two existing smoke-test cards to `Engineering`, preserving their contents and links, and update the active configuration through MCP. Keep the existing default only for requests without a specified card folder.
+
+### 2026-09-09T10:46:22-04:00 — Accept and install the Mac build
+
+- **Motivation:** Complete Stages 8 and 9 with source parity and actual installed-host evidence.
+- **Changes:** Register the repository marketplace and enable `0.2.0+codex.20260909142257`; record 70 passing tests on each APFS volume type, verified installed hashes, trusted host compaction/session-end delivery, retained-draft recovery, separately confirmed update/create, idempotent retry, inquiry, and Mac review/Obsidian inspection. Remove isolated acceptance fixtures and document platform/host coverage limits.
+
+### 2026-09-09T10:20:00-04:00 — Resolve task identity from the Mac host’s MCP requests
+
+- **Motivation:** Fresh installed-host testing showed that Mac Codex supplies task IDs per request, leaving environment-only launch detection missing or inherited from a parent task.
+- **Changes:** Prefer verified Codex request metadata for every task and preview operation, retain legacy environment fallbacks, and reject inconsistent identities. Bind token validation to both task and operation before initial saves, concurrent retries, and completed replays. Add real-protocol task-isolation regressions and revalidate before reinstalling.
+
+### 2026-09-09T10:00:00-04:00 — Verify Mac behavior and complete fallback reviews
+
+- **Motivation:** Demonstrate Windows feature parity before installation, including real Mac filesystem, protocol, review, and checkpoint behavior.
+- **Changes:** Add platform and frozen-baseline regressions, actual-launcher MCP/hook checks, task-context and concurrency coverage, review-error retry coverage, and a disposable browser review harness. Complete conversational previews with evidence, sources, and connection choices; handle generator startup/timeout failures promptly with private warnings. Document Mac packaging, runtime requirements, data locations, and test commands.
+
+### 2026-09-09T02:57:48-04:00 — Build native Mac runtime and storage support
+
+- **Motivation:** Port the full Windows feature set to macOS while retaining shared behavior and Windows launchers.
+- **Changes:** Add explicit platform MCP packaging, Mac runtime discovery, portable development commands, shared application-data resolution, private state directories, UTF-8 filename limits, and filesystem-based card/update containment.
+
 ### 2026-09-09T02:01:38-04:00 — Label the second Hook Discard draft
 
 - **Motivation:** Apply the requested name to the second Hook without changing the confirmed draft-retention behavior.

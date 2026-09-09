@@ -15,10 +15,10 @@ import {
 test("places the default configuration beneath the Windows application-data directory", () => {
   const appData = "C:\\Users\\Example\\AppData\\Roaming";
   assert.equal(
-    getDefaultConfigurationPath({ APPDATA: appData }),
-    path.join(appData, "Patchouli", "configuration.json"),
+    getDefaultConfigurationPath({ APPDATA: appData }, "win32"),
+    path.win32.join(appData, "Patchouli", "configuration.json"),
   );
-  assert.throws(() => getDefaultConfigurationPath({}), (error) => {
+  assert.throws(() => getDefaultConfigurationPath({}, "win32"), (error) => {
     assert.ok(error instanceof PatchouliError);
     assert.equal(error.code, "CONFIGURATION_INVALID");
     return true;

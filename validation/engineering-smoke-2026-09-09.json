@@ -1,0 +1,132 @@
+{
+  "recordedAt": "2026-09-09T19:13:48.532Z",
+  "pluginVersion": "0.2.0+codex.20260909142257",
+  "vaultPath": "/Users/tongshen/Koumakan_Library",
+  "cardsDirectory": "Engineering/Patchouli",
+  "checks": [
+    "installed MCP exposes all 15 tools",
+    "existing Obsidian vault configured without warnings",
+    "preview creates no card",
+    "new card save and identical retry",
+    "connection suggestion, selected wikilink, and second card save",
+    "reviewed update preserves identity, original content, and connection",
+    "updating one card leaves the other unchanged",
+    "abandoned preview does not write; duplicate title is detected",
+    "inquiry finds and reads both cards; unrelated single-token query returns no evidence",
+    "MCP restart retains configuration/cards and invalidates abandoned tokens",
+    "exactly two Markdown cards, matching MCP read-back, with no temporary files"
+  ],
+  "artifacts": [
+    {
+      "path": "/Users/tongshen/Koumakan_Library/Engineering/Patchouli/Patchouli Smoke Test - 幂等性.md",
+      "id": "5e720e02-5b55-4b6b-8494-82a89574bf2a",
+      "createdAt": "2026-09-09T19:12:31.008Z",
+      "sha256": "f9c99c75d251c58d5f73aa4810538ed8a1b7822a33e3823922f2a1d4d53ed012",
+      "links": []
+    },
+    {
+      "path": "/Users/tongshen/Koumakan_Library/Engineering/Patchouli/Patchouli Smoke Test - 指数退避.md",
+      "id": "edd89032-8672-49a5-ba9d-019db905ed61",
+      "createdAt": "2026-09-09T19:12:31.029Z",
+      "updatedAt": "2026-09-09T19:12:31.054Z",
+      "sha256": "181f60a6288ecf8bcf78d3b0dc2fa814eba0496e6229c130d6c59edcc33b6456",
+      "links": [
+        {
+          "cardRef": "Patchouli Smoke Test - 幂等性",
+          "title": "Patchouli Smoke Test - 幂等性"
+        }
+      ]
+    }
+  ],
+  "categories": {
+    "ok": true,
+    "categories": [
+      {
+        "name": "Engineering",
+        "count": 2
+      },
+      {
+        "name": "Patchouli Smoke Test 2026-09-09",
+        "count": 2
+      }
+    ]
+  },
+  "inquiry": {
+    "question": "指数退避能否保证请求重试不会产生重复副作用？",
+    "readCards": [
+      {
+        "title": "Patchouli Smoke Test - 指数退避",
+        "cardRef": "Engineering/Patchouli/Patchouli Smoke Test - 指数退避.md"
+      },
+      {
+        "title": "Patchouli Smoke Test - 幂等性",
+        "cardRef": "Engineering/Patchouli/Patchouli Smoke Test - 幂等性.md"
+      }
+    ],
+    "unsupportedQuery": "heliopausequuxzv4381",
+    "unsupportedResults": 0,
+    "answer": "不能。指数退避控制重试时间和请求压力；幂等性控制重复执行的业务副作用。超时请求可能已成功，延长等待并不防止再次扣款。随机抖动同样不能替代幂等性。"
+  },
+  "configurationRetained": true,
+  "testAdjustment": "Initial negative query contained smoke, which legitimately matched fixture titles under lexical OR search; replaced with an unrelated single token.",
+  "obsidian": {
+    "appPath": "/Applications/Obsidian.app",
+    "version": "1.13.7",
+    "chineseContentRendered": true,
+    "inlineAndDisplayMathRendered": true,
+    "updatedSummaryAndDetailVisible": true,
+    "outgoingLinkPresent": true,
+    "linkClickChangedWindowTitleToTarget": true,
+    "backlinkCountIndependentlyVerified": false,
+    "visualLimitation": "After link navigation, window title changed but accessibility content and screenshots remained stale; later calls reported noWindowsAvailable. No backlink count is claimed.",
+    "cliEnabled": false
+  },
+  "scope": "Generated smoke fixtures through the installed MCP transport; no fresh Codex-agent invocation, hook/compaction retest, or inline review-UI interaction in this smoke run.",
+  "finalAuditAt": "2026-09-09T15:18:24-04:00",
+  "folderCorrection": {
+    "completedAt": "2026-09-09T19:28:51.478Z",
+    "previousConfiguration": {
+      "vaultPath": "/Users/tongshen/Koumakan_Library",
+      "cardsDirectory": "Engineering/Patchouli"
+    },
+    "configuration": {
+      "vaultPath": "/Users/tongshen/Koumakan_Library",
+      "cardsDirectory": "Engineering"
+    },
+    "artifacts": [
+      {
+        "path": "/Users/tongshen/Koumakan_Library/Engineering/Patchouli Smoke Test - 幂等性.md",
+        "id": "5e720e02-5b55-4b6b-8494-82a89574bf2a",
+        "createdAt": "2026-09-09T19:12:31.008Z",
+        "links": [],
+        "sha256": "f9c99c75d251c58d5f73aa4810538ed8a1b7822a33e3823922f2a1d4d53ed012"
+      },
+      {
+        "path": "/Users/tongshen/Koumakan_Library/Engineering/Patchouli Smoke Test - 指数退避.md",
+        "id": "edd89032-8672-49a5-ba9d-019db905ed61",
+        "createdAt": "2026-09-09T19:12:31.029Z",
+        "updatedAt": "2026-09-09T19:12:31.054Z",
+        "links": [
+          {
+            "cardRef": "Patchouli Smoke Test - 幂等性",
+            "title": "Patchouli Smoke Test - 幂等性"
+          }
+        ],
+        "sha256": "181f60a6288ecf8bcf78d3b0dc2fa814eba0496e6229c130d6c59edcc33b6456"
+      }
+    ],
+    "contentsUnchanged": true,
+    "selectedLinkPreserved": true,
+    "searchMatches": 2,
+    "oldSubfolderRemoved": true,
+    "installedVersion": "0.2.0+codex.20260909192920",
+    "installedPath": "/Users/tongshen/.codex/plugins/cache/personal/patchouli/0.2.0+codex.20260909192920",
+    "installedSkillSha256": "e0eef9673e4605862c7e9875001a0e3c65031ee3ca975cfb67b5b0021088e00b",
+    "targetedTests": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "installedReadBackPassed": true
+  }
+}

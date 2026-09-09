@@ -1,14 +1,9 @@
 {
   "mcpServers": {
     "patchouli": {
-      "command": "cmd.exe",
+      "command": "/bin/sh",
       "args": [
-        "/d",
-        "/s",
-        "/c",
-        "call",
-        "./scripts/launch-patchouli-mcp.cmd",
-        "./dist/server.mjs"
+        "./scripts/launch-patchouli-mcp.sh"
       ],
       "cwd": ".",
       "env_vars": [
@@ -18,10 +13,14 @@
         "CODEX_CLI_PATH",
         "CODEX_THREAD_ID",
         "CODEX_SESSION_ID",
+        "HOME",
         "APPDATA",
         "USERPROFILE",
         "LOCALAPPDATA",
-        "PATH"
+        "PATH",
+        "PATCHOULI_DATA_ROOT",
+        "PATCHOULI_CHECKPOINT_ROOT",
+        "PATCHOULI_SESSION_ID"
       ],
       "startup_timeout_sec": 10,
       "tool_timeout_sec": 120

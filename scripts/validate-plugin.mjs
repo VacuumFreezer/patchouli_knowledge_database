@@ -1,6 +1,7 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { mcpConfiguration } from "../plugins/patchouli/scripts/runtime-config.mjs";
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const marketplacePath = path.join(workspaceRoot, ".agents", "plugins", "marketplace.json");
@@ -35,6 +36,9 @@ async function exists(relativePath) {
 const manifest = await readJson(manifestPath);
 const marketplace = await readJson(marketplacePath);
 const hooks = await readJson(hooksPath);
+const mcp = await readJson(path.join(pluginRoot, ".mcp.json"));
+const packagedPlatform = mcp.mcpServers?.patchouli?.command === "cmd.exe" ? "win32" : "darwin";
+check(JSON.stringify(mcp) === JSON.stringify(mcpConfiguration(packagedPlatform)), "MCP entry point must match a supported platform package");
 
 check(manifest.name === "patchouli", "manifest name must be patchouli");
 check(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(manifest.version ?? ""), "manifest version must be strict semver");
@@ -54,6 +58,10 @@ check(preCompactHook?.type === "command", "PreCompact must use a command hook");
 check(/launch-patchouli-hook\.cmd/iu.test(preCompactHook?.commandWindows ?? ""), "PreCompact must use the bundled Windows runtime launcher");
 check(await exists("hooks/checkpoint-drafts.schema.json"), "checkpoint output schema must exist");
 check(await exists("scripts/launch-patchouli-hook.cmd"), "Windows hook launcher must exist");
+check(/launch-patchouli-hook\.sh/u.test(preCompactHook?.command ?? ""), "PreCompact must use the Mac runtime launcher");
+for (const launcher of ["run-with-codex-node.sh", "launch-patchouli-mcp.sh", "launch-patchouli-hook.sh"]) {
+  check(await exists(`scripts/${launcher}`), `Mac launcher ${launcher} must exist`);
+}
 
 for (const field of ["skills", "mcpServers"]) {
   const target = manifest[field]?.replace(/^\.\//, "");

@@ -19,7 +19,9 @@ Use the local `patchouli` MCP tools to capture knowledge or answer from the user
 
 For the Launch route, the final user-facing response MUST begin with the standalone heading `# 🌿 Patchouli capture active` after `launch_patchouli` succeeds. Do not omit, translate, or demote this indicator.
 
-Before capture or inquiry, call `get_configuration`. If no vault is configured, ask for an existing absolute vault directory, then call `configure_vault`. Treat a missing `.obsidian` warning as non-fatal and tell the user. Launch does not require vault configuration because it creates only private task drafts.
+Before capture or inquiry, call `get_configuration`. If no vault is configured and the user has not supplied a location, ask for an existing absolute vault directory, then call `configure_vault`. Treat a missing `.obsidian` warning as non-fatal and tell the user. Launch does not require vault configuration because it creates only private task drafts.
+
+When the user names a folder inside an existing Obsidian vault, that folder is the exact card destination. Set `vaultPath` to the actual vault root and `cardsDirectory` to the specified folder's relative path. Do not append `Patchouli` or any other extra subfolder. For example, a request to work in `/Users/me/Koumakan_Library/Engineering` inside the `Koumakan_Library` vault means `cardsDirectory: "Engineering"`, so cards go directly in `Engineering/`. Honor that explicit destination even when an earlier configuration points elsewhere. The tool's default `Patchouli` directory applies only when the user has not specified a card folder. Changing configuration does not move existing cards; carry out any user-requested move without overwriting destination files or changing card contents.
 
 ## Trust boundary
 

@@ -2,9 +2,12 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { mcpConfiguration } from "./runtime-config.mjs";
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const distDirectory = path.join(pluginRoot, "dist");
+const targetPlatform = process.env.PATCHOULI_BUILD_PLATFORM || process.platform;
+const runtimeConfiguration = mcpConfiguration(targetPlatform);
 
 await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
@@ -80,3 +83,6 @@ await writeFile(
   `${JSON.stringify(result.metafile, null, 2)}\n`,
   "utf8",
 );
+// The MCP schema has one command, so build an explicit platform entry point.
+// Both launcher sets and all shared runtime code remain in either package.
+await writeFile(path.join(pluginRoot, ".mcp.json"), `${JSON.stringify(runtimeConfiguration, null, 2)}\n`, "utf8");

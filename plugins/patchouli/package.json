@@ -4,16 +4,16 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   },
   "scripts": {
-    "build": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\build.mjs",
-    "typecheck": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\node_modules\\typescript\\bin\\tsc --noEmit",
-    "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\test.mjs",
-    "validate:skill": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\validate-skill.mjs",
-    "verify:bundle": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\verify-bundle.mjs",
-    "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs",
-    "smoke:hook": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-hook.mjs"
+    "build": "node ./scripts/build.mjs",
+    "test": "node ./scripts/test.mjs",
+    "validate:skill": "node ./scripts/validate-skill.mjs",
+    "verify:bundle": "node ./scripts/verify-bundle.mjs",
+    "smoke:mcp": "node ./scripts/smoke-mcp.mjs",
+    "smoke:hook": "node ./scripts/smoke-hook.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

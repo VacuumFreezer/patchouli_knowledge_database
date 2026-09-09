@@ -202,3 +202,21 @@ test("renders an update review and calls only update_card after confirmation", a
     dom.window.close();
   }
 });
+
+test("shows a host save failure, allows retry, then confirms success without a duplicate request", async () => {
+  const { dom, window, messages } = await widget();
+  try {
+    window.document.querySelector('button[type="submit"]').click();
+    const first = await waitFor(() => messages.find((item) => item.method === "tools/call"));
+    window.dispatchEvent(new window.MessageEvent("message", { source: window.parent, data: { jsonrpc: "2.0", id: first.id, result: { structuredContent: { ok: false, error: { code: "IO_ERROR", message: "Temporary write failure." } } } } }));
+    await waitFor(() => window.document.querySelector('[role="status"]').textContent.includes("Temporary write failure"));
+    assert.equal(window.document.querySelector('button[type="submit"]').disabled, false);
+    window.document.querySelector('button[type="submit"]').click();
+    const second = await waitFor(() => messages.filter((item) => item.method === "tools/call")[1]);
+    assert.equal(second.params.arguments.pendingToken, first.params.arguments.pendingToken);
+    window.dispatchEvent(new window.MessageEvent("message", { source: window.parent, data: { jsonrpc: "2.0", id: second.id, result: { structuredContent: { ok: true, card: { title: "UI Review", cardRef: "Patchouli/UI Review.md" } } } } }));
+    await waitFor(() => window.document.querySelector('[role="status"]').textContent.includes("Saved UI Review"));
+    assert.equal(window.document.querySelector('button[type="submit"]').disabled, true);
+    assert.equal(messages.filter((item) => item.method === "tools/call").length, 2);
+  } finally { dom.window.close(); }
+});

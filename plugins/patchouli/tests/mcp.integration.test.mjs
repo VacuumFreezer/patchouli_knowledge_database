@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { CheckpointStore } from "../dist/core.mjs";
+import { mcpConfiguration, transportOptions } from "../scripts/runtime-config.mjs";
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const expectedTools = [
@@ -40,7 +41,7 @@ function draft(title = "Reviewed Capture") {
   };
 }
 
-async function fixture(context, ttlMs) {
+async function fixture(context, ttlMs, environment = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "patchouli-mcp-"));
   const vault = path.join(root, "vault");
   const appData = path.join(root, "appdata");
@@ -49,14 +50,15 @@ async function fixture(context, ttlMs) {
   await mkdir(appData, { recursive: true });
 
   const transport = new StdioClientTransport({
-    command: process.execPath,
-    args: [path.join(pluginRoot, "dist", "server.mjs")],
-    cwd: pluginRoot,
+    ...transportOptions(mcpConfiguration(), pluginRoot),
     env: {
       ...process.env,
       APPDATA: appData,
+      PATCHOULI_DATA_ROOT: path.join(appData, "Patchouli"),
+      PATCHOULI_CHECKPOINT_ROOT: path.join(appData, "Patchouli", "session-checkpoints"),
       PATCHOULI_SESSION_ID: sessionId,
       ...(ttlMs ? { PATCHOULI_PREVIEW_TTL_MS: String(ttlMs) } : {}),
+      ...environment,
     },
     stderr: "pipe",
   });
@@ -359,6 +361,7 @@ test("launches task capture, updates an exact card revision, and consumes only c
   assert.equal(replay.idempotentReplay, true);
 
   const newCardDraft = draft("A New Topic");
+  newCardDraft.connections = [{ cardRef: update.card.cardRef, title: update.card.title, reason: "The continued conversation connects these concepts.", selected: true }];
   const newPreview = structured(await client.callTool({
     name: "preview_card",
     arguments: {
@@ -373,6 +376,11 @@ test("launches task capture, updates an exact card revision, and consumes only c
   })).card;
   assert.equal(newCard.title, "A New Topic");
   assert.equal((structured(await client.callTool({ name: "get_checkpoint_drafts", arguments: {} }))).checkpoints.length, 0);
+  const found = structured(await client.callTool({ name: "search_cards", arguments: { query: "A New Topic", limit: 1 } })).results;
+  const read = structured(await client.callTool({ name: "get_card", arguments: { cardRef: found[0].cardRef } })).card;
+  assert.equal(read.id, newCard.id);
+  assert.match(read.markdown, /\[\[Evolved Concept\|Evolved Concept\]\]/u);
+  assert.deepEqual(structured(await client.callTool({ name: "search_cards", arguments: { query: "heliopause" } })).results, []);
 
   const conflictPreview = structured(await client.callTool({
     name: "preview_card_update",
@@ -394,4 +402,101 @@ test("launches task capture, updates an exact card revision, and consumes only c
   assert.equal(conflict.isError, true);
   assert.equal(structured(conflict).error.code, "REVISION_CONFLICT");
   assert.match(await readFile(updatedPath, "utf8"), /Manual concurrent note/u);
+});
+
+test("missing task context prevents task operations and review without blocking configuration", async (context) => {
+  const { client, vault } = await fixture(context, undefined, { PATCHOULI_SESSION_ID: "", CODEX_SESSION_ID: "", CODEX_THREAD_ID: "" });
+  assert.equal(structured(await client.callTool({ name: "configure_vault", arguments: { vaultPath: vault } })).ok, true);
+  for (const name of ["launch_patchouli", "get_patchouli_status", "stop_patchouli", "get_checkpoint_drafts", "discard_checkpoint_drafts", "preview_card"]) {
+    const result = structured(await client.callTool({ name, arguments: name === "preview_card" ? { draft: draft() } : {} }));
+    assert.equal(result.error.code, "SESSION_CONTEXT_MISSING", name);
+  }
+  assert.deepEqual(await readdir(vault), [".obsidian"]);
+});
+
+test("shared MCP processes isolate request-scoped checkpoints and preview retries between tasks", async (context) => {
+  const { client, vault, appData, sessionId: staleEnvironmentTask } = await fixture(context);
+  const call = async (task, name, args = {}) => structured(await client.callTool({ name, arguments: args, _meta: { threadId: task, "x-codex-turn-metadata": { thread_id: task, session_id: task } } }));
+  await call("task-a", "configure_vault", { vaultPath: vault });
+  const [a, b] = await Promise.all([call("task-a", "launch_patchouli"), call("task-b", "launch_patchouli")]);
+  assert.notEqual(a.status.launchId, b.status.launchId);
+  const store = new CheckpointStore({ root: path.join(appData, "Patchouli", "session-checkpoints") });
+  assert.equal((await store.status(staleEnvironmentTask)).active, false);
+  const generated = await store.replaceFromCompaction("task-a", { trigger: "manual", turnId: "one", model: "fixture", messageCount: 2, transcriptDigest: "f".repeat(64), generationStartedAtMs: Date.now(), drafts: [draft("Task A concept")] });
+  const checkpointRefs = generated.checkpoints.map(({ checkpointId, revision }) => ({ checkpointId, revision }));
+  assert.equal((await call("task-a", "get_checkpoint_drafts")).checkpoints.length, 1);
+  assert.deepEqual((await call("task-b", "get_checkpoint_drafts")).checkpoints, []);
+  assert.equal((await call("task-b", "discard_checkpoint_drafts", { checkpointRefs })).discardedCount, 0);
+  await call("task-b", "stop_patchouli");
+  assert.equal((await call("task-a", "get_patchouli_status")).status.active, true);
+  const reviewed = draft("Task A concept");
+  const preview = (await call("task-a", "preview_card", { draft: reviewed, checkpointRefs })).preview;
+  const args = { pendingToken: preview.pendingToken, draft: reviewed };
+  assert.equal((await call("task-b", "save_card", args)).error.code, "TOKEN_INVALID");
+  assert.equal((await store.list("task-a")).length, 1);
+  const [saved, denied] = await Promise.all([call("task-a", "save_card", args), call("task-b", "save_card", args)]);
+  assert.equal(saved.ok, true);
+  assert.equal(denied.error.code, "TOKEN_INVALID");
+  assert.equal((await call("task-a", "save_card", args)).idempotentReplay, true);
+  assert.equal((await call("task-b", "save_card", args)).error.code, "TOKEN_INVALID");
+  assert.equal((await call("task-a", "update_card", args)).error.code, "TOKEN_INVALID");
+  assert.deepEqual(await store.list("task-a"), []);
+  const changed = { ...reviewed, summaryMarkdown: "Confirmed task A refinement." };
+  const update = (await call("task-a", "preview_card_update", { cardRef: saved.card.cardRef, expectedRevision: saved.card.revision, draft: changed })).preview;
+  const updateArgs = { pendingToken: update.pendingToken, draft: changed };
+  assert.equal((await call("task-b", "update_card", updateArgs)).error.code, "TOKEN_INVALID");
+  assert.equal((await call("task-a", "update_card", updateArgs)).ok, true);
+  assert.equal((await call("task-b", "update_card", updateArgs)).error.code, "TOKEN_INVALID");
+  assert.equal((await call("task-a", "save_card", updateArgs)).error.code, "TOKEN_INVALID");
+});
+
+test("exercises status, stop, discard and invalid inputs through the platform launcher", async (context) => {
+  const { client, vault, appData, sessionId } = await fixture(context);
+  const call = async (name, args = {}) => structured(await client.callTool({ name, arguments: args }));
+  assert.equal((await call("get_patchouli_status")).status.active, false);
+  assert.equal((await call("search_cards", { query: "nothing" })).error.code, "CONFIGURATION_MISSING");
+  assert.equal((await call("configure_vault", { vaultPath: "relative" })).error.code, "VALIDATION_ERROR");
+  await call("configure_vault", { vaultPath: vault });
+  assert.deepEqual((await call("search_cards", { query: "unavailable evidence" })).results, []);
+  assert.deepEqual((await call("list_categories")).categories, []);
+  const launch = await call("launch_patchouli");
+  assert.equal((await call("launch_patchouli")).status.launchId, launch.status.launchId);
+  const store = new CheckpointStore({ root: path.join(appData, "Patchouli", "session-checkpoints") });
+  const generated = await store.replaceFromCompaction(sessionId, { trigger: "manual", turnId: "manual", model: "test", messageCount: 2, transcriptDigest: "e".repeat(64), generationStartedAtMs: Date.now(), drafts: [draft("Keep"), draft("Discard")] });
+  assert.equal((await call("stop_patchouli")).status.checkpointCount, 2);
+  assert.equal((await call("get_checkpoint_drafts")).checkpoints.length, 2);
+  const ref = (({ checkpointId, revision }) => ({ checkpointId, revision }))(generated.checkpoints[1]);
+  assert.equal((await call("discard_checkpoint_drafts", { checkpointRefs: [ref] })).discardedCount, 1);
+  assert.equal((await call("discard_checkpoint_drafts", { checkpointRefs: [ref] })).discardedCount, 0);
+  assert.equal((await call("discard_checkpoint_drafts")).discardedCount, 1);
+  assert.equal((await call("get_patchouli_status")).status.checkpointCount, 0);
+  assert.equal((await call("stop_patchouli", { discardCheckpointDrafts: true })).status.active, false);
+  for (const [name, args] of [
+    ["search_cards", { query: "x", limit: 0 }],
+    ["get_card", { cardRef: "" }],
+    ["suggest_links", { title: "x", categories: [], summary: "s", detail: "d", limit: 21 }],
+    ["discard_checkpoint_drafts", { checkpointRefs: [{ checkpointId: "bad", revision: "bad" }] }],
+    ["stop_patchouli", { discardCheckpointDrafts: "true" }],
+    ["preview_card_update", { cardRef: "x", expectedRevision: "bad", draft: draft() }],
+  ]) assert.equal((await client.callTool({ name, arguments: args })).isError, true, name);
+});
+
+test("concurrent confirmed saves are idempotent and create/update tokens cannot be swapped", async (context) => {
+  const { client, vault } = await fixture(context);
+  await client.callTool({ name: "configure_vault", arguments: { vaultPath: vault } });
+  const reviewed = { ...draft("Concurrent"), sources: [{ type: "paper", label: "Example reference", url: "https://example.com/real-source" }], connections: [{ cardRef: "Patchouli/Related.md", title: "Related", reason: "Shared concept", selected: true }] };
+  const previewResult = await client.callTool({ name: "preview_card", arguments: { draft: reviewed } });
+  assert.match(previewResult.content[0].text, /Example reference[\s\S]*https:\/\/example.com\/real-source/u);
+  assert.match(previewResult.content[0].text, /\[x\] Related[\s\S]*Shared concept/u);
+  const preview = structured(previewResult).preview;
+  const wrong = structured(await client.callTool({ name: "update_card", arguments: { pendingToken: preview.pendingToken, draft: reviewed } }));
+  assert.equal(wrong.error.code, "TOKEN_INVALID");
+  const results = await Promise.all(Array.from({ length: 4 }, () => client.callTool({ name: "save_card", arguments: { pendingToken: preview.pendingToken, draft: reviewed } })));
+  assert.equal(results.filter((result) => structured(result).idempotentReplay === false).length, 1);
+  const card = structured(results[0]).card;
+  const next = { ...reviewed, summaryMarkdown: "Updated." };
+  const updatePreview = await client.callTool({ name: "preview_card_update", arguments: { cardRef: card.cardRef, expectedRevision: card.revision, draft: next } });
+  assert.match(updatePreview.content[0].text, /Example reference[\s\S]*Shared concept/u);
+  assert.equal(structured(await client.callTool({ name: "save_card", arguments: { pendingToken: structured(updatePreview).preview.pendingToken, draft: next } })).error.code, "TOKEN_INVALID");
+  assert.equal((await readdir(path.join(vault, "Patchouli"))).length, 1);
 });

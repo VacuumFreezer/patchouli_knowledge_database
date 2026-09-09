@@ -34,7 +34,11 @@ try {
   await store.launch(sessionId);
 
   const result = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.join(runtimePluginRoot, "dist", "hook.mjs"), "precompact"], {
+    const command = process.platform === "win32" ? "cmd.exe" : "/bin/sh";
+    const args = process.platform === "win32"
+      ? ["/d", "/s", "/c", "call", "./scripts/launch-patchouli-hook.cmd", "./dist/hook.mjs", "precompact"]
+      : [path.join(runtimePluginRoot, "scripts", "launch-patchouli-hook.sh"), "precompact"];
+    const child = spawn(command, args, {
       cwd: runtimePluginRoot,
       windowsHide: true,
       stdio: ["pipe", "pipe", "pipe"],

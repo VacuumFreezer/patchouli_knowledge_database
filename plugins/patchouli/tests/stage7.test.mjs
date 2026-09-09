@@ -260,3 +260,40 @@ test("hook failures continue compaction without echoing transcript content", asy
   assert.match(warning.systemMessage, /compaction will continue/iu);
   assert.doesNotMatch(result.stdout, new RegExp(secret, "u"));
 });
+
+test("missing generator executables and timeouts exit promptly with a content-free warning", async (context) => {
+  const temporary = await mkdtemp(path.join(tmpdir(), "patchouli-generator-failure-"));
+  context.after(() => rm(temporary, { recursive: true, force: true }));
+  const transcript = path.join(temporary, "transcript.jsonl");
+  await writeFile(transcript, transcriptRow("user", "PRIVATE-GENERATOR-FIXTURE"));
+  const root = path.join(temporary, "state");
+  await new CheckpointStore({ root }).launch("generator-task");
+  const commands = [path.join(temporary, "missing-codex")];
+  if (process.platform !== "win32") {
+    const { chmod } = await import("node:fs/promises");
+    const slow = path.join(temporary, "slow-codex");
+    await writeFile(slow, `#!/bin/sh\nexec '${process.execPath.replaceAll("'", "'\\''")}' -e 'setInterval(()=>{},1000)'\n`);
+    await chmod(slow, 0o700); commands.push(slow);
+  }
+  for (const command of commands) {
+    const result = spawnSync(process.execPath, [path.join(runtimePluginRoot, "dist/hook.mjs")], {
+      input: JSON.stringify({ session_id: "generator-task", transcript_path: transcript }), encoding: "utf8", timeout: 5000,
+      env: { ...process.env, NODE_ENV: "test", PATCHOULI_HOOK_DRAFT_FIXTURE_PATH: "", PATCHOULI_HOOK_TIMEOUT_MS: "50", PATCHOULI_CHECKPOINT_ROOT: root, CODEX_CLI_PATH: command },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).continue, true);
+    assert.doesNotMatch(result.stdout + result.stderr, /PRIVATE-GENERATOR-FIXTURE/u);
+    assert.equal((await new CheckpointStore({ root }).list("generator-task")).length, 0);
+  }
+});
+
+test("caps checkpoint count and rejects oversized writes without replacing saved drafts", async (context) => {
+  const root = await mkdtemp(path.join(tmpdir(), "patchouli-checkpoint-limits-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const store = new CheckpointStore({ root }); await store.launch("bounds");
+  const input = { trigger: "manual", turnId: "bounds", model: "test", messageCount: 1, transcriptDigest: "a".repeat(64), generationStartedAtMs: 1, drafts: Array.from({ length: 9 }, (_, i) => draft(`Topic ${i}`)) };
+  await store.replaceFromCompaction("bounds", input);
+  const before = await store.list("bounds"); assert.equal(before.length, 8);
+  await assert.rejects(store.replaceFromCompaction("bounds", { ...input, transcriptDigest: "b".repeat(64), generationStartedAtMs: 2, drafts: [draft("Too large", "x".repeat(5 * 1024 * 1024))] }), (error) => error.code === "IO_ERROR");
+  assert.deepEqual(await store.list("bounds"), before);
+});

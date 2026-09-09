@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { PatchouliError, isNodeError } from "./errors.js";
+import { getApplicationDataDirectory } from "./platform.js";
 import { normalizeRelativePath, resolveContainedPath, validateVaultDirectory } from "./paths.js";
 import {
   DEFAULT_CARDS_DIRECTORY,
@@ -33,21 +34,17 @@ async function validateCardsDirectory(vaultPath: string, cardsDirectory: string)
   }
 }
 
-export function getDefaultConfigurationPath(environment: NodeJS.ProcessEnv = process.env): string {
-  const appData = environment.APPDATA;
-  if (!appData || !path.isAbsolute(appData)) {
-    throw new PatchouliError(
-      "CONFIGURATION_INVALID",
-      "APPDATA must identify the current Windows user's application-data directory.",
-      { environmentVariable: "APPDATA" },
-    );
-  }
-  return path.join(appData, "Patchouli", "configuration.json");
+export function getDefaultConfigurationPath(
+  environment: NodeJS.ProcessEnv = process.env,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  const paths = platform === "win32" ? path.win32 : path.posix;
+  return paths.join(getApplicationDataDirectory(environment, platform), "configuration.json");
 }
 
 async function writeJsonAtomically(filePath: string, value: unknown): Promise<void> {
   const directory = path.dirname(filePath);
-  await fs.mkdir(directory, { recursive: true });
+  await fs.mkdir(directory, { recursive: true, mode: 0o700 });
   const temporaryPath = path.join(directory, `.configuration-${randomUUID()}.tmp`);
   let handle: fs.FileHandle | undefined;
   try {

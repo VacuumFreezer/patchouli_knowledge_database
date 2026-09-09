@@ -1,23 +1,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
+import { transportOptions } from "./runtime-config.mjs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const sourcePluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pluginRoot = path.resolve(process.env.PATCHOULI_SMOKE_PLUGIN_ROOT || sourcePluginRoot);
-const transport = new StdioClientTransport({
-  command: "cmd.exe",
-  args: [
-    "/d",
-    "/s",
-    "/c",
-    "call",
-    "./scripts/launch-patchouli-mcp.cmd",
-    "./dist/server.mjs",
-  ],
-  cwd: pluginRoot,
-  stderr: "pipe",
-});
+const configuration = JSON.parse(await readFile(path.join(pluginRoot, ".mcp.json"), "utf8"));
+const transport = new StdioClientTransport(transportOptions(configuration, pluginRoot));
 const client = new Client({ name: "patchouli-stage-4-smoke", version: "0.1.0" });
 
 try {

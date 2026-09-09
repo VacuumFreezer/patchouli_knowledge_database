@@ -194,6 +194,11 @@ export function sanitizeTitleToFilename(title: string): string {
 
   if (WINDOWS_RESERVED_NAME.test(stem)) stem = `_${stem}`;
   stem = Array.from(stem).slice(0, 116).join("").replace(/[.\s]+$/gu, "");
+  // APFS and other Unix filesystems limit UTF-8 filename bytes, not JS characters.
+  while (Buffer.byteLength(stem, "utf8") > 236) {
+    stem = Array.from(stem).slice(0, -1).join("");
+  }
+  stem = stem.replace(/[.\s]+$/gu, "");
   if (stem.length === 0) {
     throw new PatchouliError("VALIDATION_ERROR", "title does not produce a valid filename.", {
       field: "title",

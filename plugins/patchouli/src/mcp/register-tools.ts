@@ -92,17 +92,24 @@ function previewFallbackText(
   expiresAt: string,
 ): string {
   const categories = draft.categories.length > 0 ? draft.categories.join(", ") : "None";
-  const selected = draft.connections.filter((connection) => connection.selected);
   return [
     `Review Patchouli card “${draft.title}” (${draft.filename}).`,
     `Categories: ${categories}.`,
     `Summary:\n${draft.summaryMarkdown}`,
     `Detail:\n${draft.detailMarkdown}`,
-    `Evidence items: ${draft.evidence.length}; sources: ${draft.sources.length}; selected connections: ${selected.length}.`,
+    reviewDetails(draft),
     collision.exists
       ? `Collision: ${collision.cardRef} already exists. Edit the title and preview again before saving.`
       : `Destination is available: ${collision.cardRef}.`,
     `This preview expires at ${expiresAt}. Ask the user to confirm or revise it. Only after explicit confirmation, call save_card with the pending token and final reviewed draft.`,
+  ].join("\n\n");
+}
+
+function reviewDetails(draft: ReturnType<typeof normalizeCardDraft>): string {
+  return [
+    `Evidence:\n${draft.evidence.map((item) => `- ${item.claim} — ${item.sourceReference}`).join("\n") || "None."}`,
+    `Sources:\n${draft.sources.map((source) => `- ${source.type}: ${source.label}${source.url ? ` (${source.url})` : ""}`).join("\n") || "None."}`,
+    `Connections:\n${draft.connections.map((connection) => `- [${connection.selected ? "x" : " "}] ${connection.title} (${connection.cardRef}) — ${connection.reason}`).join("\n") || "None."}`,
   ].join("\n\n");
 }
 
@@ -152,8 +159,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         openWorldHint: false,
       },
     },
-    async () => safely(async () => {
-      const status = await context.checkpoints.launch(currentPatchouliSessionId());
+    async (_args, extra) => safely(async () => {
+      const status = await context.checkpoints.launch(currentPatchouliSessionId(extra._meta));
       return success(
         { status, indicator: "🌿 Patchouli capture active" },
         "🌿 Patchouli capture active for this task. Before context compaction, it will preserve private drafts without writing your vault.",
@@ -170,8 +177,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       outputSchema: { ...baseOutputShape, status: patchouliSessionStatusSchema.optional() },
       annotations: readAnnotations,
     },
-    async () => safely(async () => {
-      const status = await context.checkpoints.status(currentPatchouliSessionId());
+    async (_args, extra) => safely(async () => {
+      const status = await context.checkpoints.status(currentPatchouliSessionId(extra._meta));
       return success(
         { status },
         status.active
@@ -195,8 +202,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         openWorldHint: false,
       },
     },
-    async ({ discardCheckpointDrafts = false }) => safely(async () => {
-      const status = await context.checkpoints.stop(currentPatchouliSessionId(), discardCheckpointDrafts);
+    async ({ discardCheckpointDrafts = false }, extra) => safely(async () => {
+      const status = await context.checkpoints.stop(currentPatchouliSessionId(extra._meta), discardCheckpointDrafts);
       return success(
         { status },
         discardCheckpointDrafts
@@ -215,8 +222,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       outputSchema: { ...baseOutputShape, checkpoints: z.array(checkpointDraftSchema).optional() },
       annotations: readAnnotations,
     },
-    async () => safely(async () => {
-      const checkpoints = await context.checkpoints.list(currentPatchouliSessionId());
+    async (_args, extra) => safely(async () => {
+      const checkpoints = await context.checkpoints.list(currentPatchouliSessionId(extra._meta));
       return success(
         { checkpoints },
         checkpoints.length > 0
@@ -240,8 +247,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         openWorldHint: false,
       },
     },
-    async ({ checkpointRefs }) => safely(async () => {
-      const discardedCount = await context.checkpoints.discard(currentPatchouliSessionId(), checkpointRefs);
+    async ({ checkpointRefs }, extra) => safely(async () => {
+      const discardedCount = await context.checkpoints.discard(currentPatchouliSessionId(extra._meta), checkpointRefs);
       return success({ discardedCount }, `Discarded ${discardedCount} checkpoint draft(s) from this task.`);
     }),
   );
@@ -440,8 +447,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         "openai/toolInvocation/invoked": "Card ready for review.",
       },
     },
-    async ({ draft, checkpointRefs = [] }) => safely(async () => {
-      const sessionId = currentPatchouliSessionId();
+    async ({ draft, checkpointRefs = [] }, extra) => safely(async () => {
+      const sessionId = currentPatchouliSessionId(extra._meta);
       await validateCheckpointReferences(context.checkpoints, sessionId, checkpointRefs);
       const inspection = await context.engine.inspectDraft(draft);
       const pending = context.previews.issue({ operation: "create", sessionId, checkpointRefs });
@@ -482,7 +489,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         "openai/toolInvocation/invoked": "Reviewed card saved.",
       },
     },
-    async ({ pendingToken, draft }) => safely(async () => {
+    async ({ pendingToken, draft }, extra) => safely(async () => {
+      const sessionId = currentPatchouliSessionId(extra._meta);
       const normalizedDraft = normalizeCardDraft(draft);
       const resolution = await context.previews.save(
         pendingToken,
@@ -495,6 +503,11 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
           const saved = await context.engine.writeCard(normalizedDraft);
           await context.checkpoints.discard(metadata.sessionId, metadata.checkpointRefs).catch(() => undefined);
           return saved;
+        },
+        (metadata) => {
+          if (metadata?.operation !== "create" || metadata.sessionId !== sessionId) {
+            throw new PatchouliError("TOKEN_INVALID", "This review token belongs to another task or operation.");
+          }
         },
       );
       const { card } = resolution.value;
@@ -552,8 +565,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         "openai/toolInvocation/invoked": "Card update ready for review.",
       },
     },
-    async ({ cardRef, expectedRevision, draft, checkpointRefs = [] }) => safely(async () => {
-      const sessionId = currentPatchouliSessionId();
+    async ({ cardRef, expectedRevision, draft, checkpointRefs = [] }, extra) => safely(async () => {
+      const sessionId = currentPatchouliSessionId(extra._meta);
       await validateCheckpointReferences(context.checkpoints, sessionId, checkpointRefs);
       const inspection = await context.engine.inspectCardUpdate(cardRef, expectedRevision, draft);
       const pending = context.previews.issue({
@@ -577,8 +590,10 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         [
           `Review the update to Patchouli card “${inspection.target.title}”.`,
           `New title: “${inspection.draft.title}”. ${collision}`,
+          `Categories: ${inspection.draft.categories.join(", ") || "None"}.`,
           `Summary:\n${inspection.draft.summaryMarkdown}`,
           `Detail:\n${inspection.draft.detailMarkdown}`,
+          reviewDetails(inspection.draft),
           `This preview expires at ${pending.expiresAt}. Only after explicit confirmation, call update_card with the pending token and final reviewed draft.`,
         ].join("\n\n"),
       );
@@ -611,7 +626,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
         "openai/toolInvocation/invoked": "Reviewed card updated.",
       },
     },
-    async ({ pendingToken, draft }) => safely(async () => {
+    async ({ pendingToken, draft }, extra) => safely(async () => {
+      const sessionId = currentPatchouliSessionId(extra._meta);
       const normalizedDraft = normalizeCardDraft(draft);
       const resolution = await context.previews.save(
         pendingToken,
@@ -628,6 +644,11 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
           );
           await context.checkpoints.discard(metadata.sessionId, metadata.checkpointRefs).catch(() => undefined);
           return saved;
+        },
+        (metadata) => {
+          if (metadata?.operation !== "update" || metadata.sessionId !== sessionId) {
+            throw new PatchouliError("TOKEN_INVALID", "This review token belongs to another task or operation.");
+          }
         },
       );
       const { card, previousCardRef } = resolution.value;

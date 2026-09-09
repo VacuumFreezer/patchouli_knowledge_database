@@ -1,0 +1,141 @@
+{
+  "sourceRevision": "6829a7ef29b0cbd21495178be42bbe2657bf238d",
+  "provenance": "Platform-independent behavior from the committed Windows distribution, evaluated on macOS; not a native Windows run.",
+  "expected": {
+    "cards": [
+      {
+        "id": "11111111-1111-4111-8111-111111111110",
+        "title": "Bayesian Updating",
+        "categories": [
+          "Probability"
+        ],
+        "createdAt": "2026-09-09T00:00:00.000Z",
+        "sourceTypes": [
+          "text"
+        ],
+        "markdown": "---\n\"id\": \"11111111-1111-4111-8111-111111111110\"\n\"title\": \"Bayesian Updating\"\n\"categories\":\n  - \"Probability\"\n\"created_at\": \"2026-09-09T00:00:00.000Z\"\n\"source_types\":\n  - \"text\"\n---\n\n# Bayesian Updating\n\n## Summary\n\nBayesian updating combines prior knowledge with observed evidence.\n\n## Detail\n\n### Derivation\n\nNormalize the prior and likelihood:\n\n$$\np(H|E)=\\frac{p(E|H)p(H)}{p(E)}\n$$\n\nThe denominator must be positive.\n\n## Evidence\n\n- Posterior odds incorporate the likelihood ratio. — Parity fixture\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: [Parity source](https://example.com/source)\n",
+        "bodyMarkdown": "# Bayesian Updating\n\n## Summary\n\nBayesian updating combines prior knowledge with observed evidence.\n\n## Detail\n\n### Derivation\n\nNormalize the prior and likelihood:\n\n$$\np(H|E)=\\frac{p(E|H)p(H)}{p(E)}\n$$\n\nThe denominator must be positive.\n\n## Evidence\n\n- Posterior odds incorporate the likelihood ratio. — Parity fixture\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: [Parity source](https://example.com/source)\n",
+        "bodyText": "Bayesian Updating Summary Bayesian updating combines prior knowledge with observed evidence. Detail Derivation Normalize the prior and likelihood: $$ p(H|E)=\\frac{p(E|H)p(H)}{p(E)} $$ The denominator must be positive. Evidence Posterior odds incorporate the likelihood ratio. — Parity fixture Connections None. Sources text: Parity source",
+        "links": [],
+        "cardRef": "Patchouli/Bayesian Updating.md",
+        "filename": "Bayesian Updating.md",
+        "warnings": [],
+        "revision": "338d49b983713a3c14acc141cea9e6d3ace72c64bd2ddf378a5a3f9cf87d4dac"
+      },
+      {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "title": "概率与推断",
+        "categories": [
+          "Mathematics",
+          "统计"
+        ],
+        "createdAt": "2026-09-09T00:00:00.000Z",
+        "sourceTypes": [
+          "text"
+        ],
+        "markdown": "---\n\"id\": \"11111111-1111-4111-8111-111111111111\"\n\"title\": \"概率与推断\"\n\"categories\":\n  - \"Mathematics\"\n  - \"统计\"\n\"created_at\": \"2026-09-09T00:00:00.000Z\"\n\"source_types\":\n  - \"text\"\n---\n\n# 概率与推断\n\n## Summary\n\nBayesian updating combines prior knowledge with observed evidence.\n\n## Detail\n\n### Derivation\n\nNormalize the prior and likelihood:\n\n$$\np(H|E)=\\frac{p(E|H)p(H)}{p(E)}\n$$\n\nThe denominator must be positive.\n\n## Evidence\n\n- Posterior odds incorporate the likelihood ratio. — Parity fixture\n\n## Connections\n\n- [[Bayesian Updating|Bayesian Updating]] — Same method\n\n## Sources\n\n- text: [Parity source](https://example.com/source)\n",
+        "bodyMarkdown": "# 概率与推断\n\n## Summary\n\nBayesian updating combines prior knowledge with observed evidence.\n\n## Detail\n\n### Derivation\n\nNormalize the prior and likelihood:\n\n$$\np(H|E)=\\frac{p(E|H)p(H)}{p(E)}\n$$\n\nThe denominator must be positive.\n\n## Evidence\n\n- Posterior odds incorporate the likelihood ratio. — Parity fixture\n\n## Connections\n\n- [[Bayesian Updating|Bayesian Updating]] — Same method\n\n## Sources\n\n- text: [Parity source](https://example.com/source)\n",
+        "bodyText": "概率与推断 Summary Bayesian updating combines prior knowledge with observed evidence. Detail Derivation Normalize the prior and likelihood: $$ p(H|E)=\\frac{p(E|H)p(H)}{p(E)} $$ The denominator must be positive. Evidence Posterior odds incorporate the likelihood ratio. — Parity fixture Connections Bayesian Updating Bayesian Updating — Same method Sources text: Parity source",
+        "links": [
+          {
+            "cardRef": "Bayesian Updating",
+            "title": "Bayesian Updating"
+          }
+        ],
+        "cardRef": "Patchouli/概率与推断.md",
+        "filename": "概率与推断.md",
+        "warnings": [],
+        "revision": "9de3fd817f5ce89bd869ae1af3d6dd733ea9a0cb91e41e9560488a392510759a"
+      },
+      {
+        "title": "Legacy",
+        "categories": [
+          "Archive"
+        ],
+        "sourceTypes": [],
+        "markdown": "---\ntitle: Legacy\ncategories: Archive\n---\n# Legacy\n\n## My Understanding\n\nLegacy Bayesian interpretation.\n\n## Annotations\n\nKeep this.",
+        "bodyMarkdown": "# Legacy\n\n## My Understanding\n\nLegacy Bayesian interpretation.\n\n## Annotations\n\nKeep this.",
+        "bodyText": "Legacy My Understanding Legacy Bayesian interpretation. Annotations Keep this.",
+        "links": [],
+        "cardRef": "Patchouli/Legacy.md",
+        "filename": "Legacy.md",
+        "warnings": [],
+        "revision": "317c89d9a53428d2934a0523de7ec76b3fb069b4d8ade9d0e9d5eb62d50b93b6"
+      }
+    ],
+    "categories": [
+      {
+        "name": "Archive",
+        "count": 1
+      },
+      {
+        "name": "Mathematics",
+        "count": 1
+      },
+      {
+        "name": "Probability",
+        "count": 1
+      },
+      {
+        "name": "统计",
+        "count": 1
+      }
+    ],
+    "search": [
+      {
+        "cardRef": "Patchouli/Bayesian Updating.md",
+        "title": "Bayesian Updating",
+        "categories": [
+          "Probability"
+        ],
+        "score": 72,
+        "matchedFields": [
+          "body",
+          "title"
+        ],
+        "excerpt": "Bayesian Updating Summary Bayesian updating combines prior knowledge with observed evidence. Detail Derivation Normalize the prior and likelihood: $$ p(H|E)=\\frac{p(E|H)p(H)}{p(E)} $$ The denominator must be positive. Ev…"
+      },
+      {
+        "cardRef": "Patchouli/概率与推断.md",
+        "title": "概率与推断",
+        "categories": [
+          "Mathematics",
+          "统计"
+        ],
+        "score": 6,
+        "matchedFields": [
+          "body"
+        ],
+        "excerpt": "概率与推断 Summary Bayesian updating combines prior knowledge with observed evidence. Detail Derivation Normalize the prior and likelihood: $$ p(H|E)=\\frac{p(E|H)p(H)}{p(E)} $$ The denominator must be positive. Evidence Poste…"
+      },
+      {
+        "cardRef": "Patchouli/Legacy.md",
+        "title": "Legacy",
+        "categories": [
+          "Archive"
+        ],
+        "score": 2,
+        "matchedFields": [
+          "body"
+        ],
+        "excerpt": "Legacy My Understanding Legacy Bayesian interpretation. Annotations Keep this."
+      }
+    ],
+    "filtered": [
+      {
+        "cardRef": "Patchouli/概率与推断.md",
+        "title": "概率与推断",
+        "categories": [
+          "Mathematics",
+          "统计"
+        ],
+        "score": 4,
+        "matchedFields": [
+          "body"
+        ],
+        "excerpt": "概率与推断 Summary Bayesian updating combines prior knowledge with observed evidence. Detail Derivation Normalize the prior and likelihood: $$ p(H|E)=\\frac{p(E|H)p(H)}{p(E)} $$ The denominator must be positive. Evidence Poste…"
+      }
+    ],
+    "absent": []
+  }
+}

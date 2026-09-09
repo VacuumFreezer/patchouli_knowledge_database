@@ -1,6 +1,6 @@
 # Patchouli
 
-Patchouli is a Windows-first personal Codex plugin for turning an active learning conversation or pasted text into reviewed Markdown knowledge cards. Cards live in a user-selected Obsidian vault, use Obsidian wikilinks for connections, and remain the only durable knowledge database. Explicitly launched sessions may also keep bounded, transient checkpoint drafts outside the vault until their knowledge is confirmed into cards.
+Patchouli is a native macOS and Windows personal Codex plugin for turning an active learning conversation or pasted text into reviewed Markdown knowledge cards. Cards live in a user-selected Obsidian vault, use Obsidian wikilinks for connections, and remain the only durable knowledge database. Explicitly launched sessions may also keep bounded, transient checkpoint drafts outside the vault until their knowledge is confirmed into cards.
 
 Development is intentionally staged. See [PROGRESS.md](PROGRESS.md) for the current stage and its verification evidence, and [CHANGELOG.md](CHANGELOG.md) for the motivation and scope of each cohesive implementation change.
 
@@ -12,7 +12,7 @@ Development is intentionally staged. See [PROGRESS.md](PROGRESS.md) for the curr
 - Retrieval: local lexical search over Markdown, with no hosted or local vector database.
 - Writes: a card is previewed and explicitly confirmed before an atomic create-only save.
 - Collisions: an existing card is never overwritten or automatically suffixed.
-- Platform: native Windows first; macOS, Linux, WSL, rich file ingestion, webpages, PDFs, code pipelines, and video are outside v1.
+- Platform: native macOS and Windows. Linux, WSL, rich file ingestion, webpages, PDFs, code pipelines, and video remain outside the implemented scope.
 
 Stage 7 extends those v1 guarantees with reviewed updates and opt-in compaction checkpoints. It does not turn ordinary Patchouli capture into background monitoring.
 
@@ -26,7 +26,7 @@ The canonical plugin will live at `plugins/patchouli` and will be exposed throug
 | Local TypeScript MCP server | Validate configuration and paths, parse/search cards, produce link candidates, manage preview tokens, and perform controlled atomic writes. |
 | Inline MCP App | Provide an editable capture review with explicit Save and Cancel actions. All workflows must also work without the UI. |
 | Bundled Codex Hook | On `PreCompact`, and only for a task that explicitly launched Patchouli, invoke a read-only ephemeral Codex synthesis and persist checkpoint drafts without writing the vault. |
-| Transient checkpoint store | Keep bounded, task-isolated draft working state under the Windows application-data directory until confirmed cards consume it. It is not an authoritative knowledge database. |
+| Transient checkpoint store | Keep bounded, task-isolated draft working state under the platform application-data directory until confirmed cards consume it. It is not an authoritative knowledge database. |
 | Obsidian vault | Remain the canonical database. Obsidian renders wikilinks and derives backlinks; Patchouli does not maintain a second database. |
 | Disposable in-memory index | Accelerate lexical retrieval and rebuild from current Markdown whenever necessary. It is never authoritative. |
 
@@ -63,6 +63,8 @@ If the learning session contains unrelated concepts, Patchouli proposes separate
 7. `SessionEnd` stops automatic capture but retains outstanding drafts and their identities on disk. Returning to the same Codex task can read them without relaunching; explicitly launch again to resume automatic checkpoints. Session termination never counts as card-save confirmation.
 
 Plugin Hooks require a one-time trust review in Codex. If the Hook is unavailable, untrusted, times out, or cannot synthesize a valid draft, compaction continues and Codex shows a warning rather than blocking the conversation.
+
+Patchouli identifies each task from Codex's MCP request metadata (`threadId` or `x-codex-turn-metadata`), so a shared server keeps each task's drafts and review tokens separate. Legacy environment identifiers remain a fallback for older hosts and isolated test clients; request metadata takes precedence.
 
 ## Card update flow
 
@@ -138,60 +140,67 @@ Every new card follows [prompts/card_template.md](prompts/card_template.md):
 
 ## Configuration and path safety
 
-- Configuration is stored in the current Windows user's application-data directory, never in the vault.
+- Configuration is stored in the current user's platform application-data directory, never in the vault.
 - `vaultPath` must be an existing absolute writable directory. A missing `.obsidian` directory produces a warning, not a failure.
 - `cardsDirectory` is relative to the vault and cannot escape it through traversal, absolute paths, or symlinks.
 - Card filenames are derived from titles with Windows-invalid characters and reserved device names rejected or sanitized.
 - New-card writes use a temporary file in the destination directory followed by an atomic no-replace promotion.
 - Reviewed updates use an optimistic content revision and same-filesystem atomic replacement. A title-derived rename also checks the new destination without overwriting it.
 - Existing destination files still produce a collision error unless the user is confirming an update token bound to that exact existing card.
-- Transient checkpoints live under `%APPDATA%\Patchouli\session-checkpoints`, use a hash-derived task directory, and never accept a model-provided storage path.
+- Transient checkpoints live under the platform Patchouli data directory in `session-checkpoints`, use a hash-derived task directory, and never accept a model-provided storage path.
 
 ## Development setup
 
 Stage 7 exposes fifteen public MCP tools on top of the original vault engine. `preview_card` and `preview_card_update` return normalized review data, an expiring single-use token, conversational confirmation instructions, and the optional React MCP App resource. `save_card` remains create-only; `update_card` is restricted to the exact card and revision selected during update preview. Identical retries return the original result. Abandoned preview tokens expire after 15 minutes.
 
-The engine stores configuration at `%APPDATA%\Patchouli\configuration.json`, rebuilds its search index from Markdown whenever cards are scanned, and never persists a secondary database. Card saves write and flush a temporary file in the cards directory, then use an atomic no-replace filesystem promotion. This is stronger than an ordinary Windows rename, which may replace an existing destination during a race.
+The engine stores configuration in the platform data directory, rebuilds its search index from Markdown whenever cards are scanned, and never persists a secondary database. Card saves write and flush a temporary file in the cards directory, then use an atomic no-replace filesystem promotion. This is stronger than an ordinary Windows rename, which may replace an existing destination during a race.
 
 Prerequisites:
 
-- Windows 11 or a supported native Windows environment
+- Native macOS (Apple Silicon tested) or Windows 11
 - Codex desktop app
 - Obsidian for final vault verification
-- Node.js 20 or newer
-- pnpm 10 or newer
+- Node.js 20.19 or newer for the runtime; Node.js 24 is recommended for development (the UI test dependency requires 20.19+, 22.12+, or 24+)
+- pnpm 11.19.0 (pinned by the workspace)
 
 Development commands:
 
-```powershell
-pnpm install
+```sh
+pnpm install --frozen-lockfile
 pnpm build
 pnpm typecheck
 pnpm test
 pnpm validate:skill
 pnpm validate:plugin
+pnpm verify:bundle
 pnpm inspect:mcp
 pnpm inspect:hook
 ```
 
-`test` performs a fresh build before running the unit, temporary-vault MCP, Hook, update, skill-contract, and jsdom React interaction suites. `validate:skill` checks discovery metadata, launch routing, progressive references, implicit invocation, and the local MCP dependency. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the same Windows launcher used by `.mcp.json`, completes MCP initialization, and verifies the fifteen-tool catalog. `inspect:hook` makes one real read-only Codex synthesis from a tiny generated transcript, verifies that a private checkpoint appears, touches no vault, and removes its temporary state afterward.
+`test` performs a fresh build before running the unit, temporary-vault MCP, Hook, update, skill-contract, and jsdom React interaction suites. `validate:skill` checks discovery metadata, launch routing, progressive references, implicit invocation, and the local MCP dependency. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the platform launcher selected in `.mcp.json`, completes MCP initialization, and verifies the fifteen-tool catalog. `inspect:hook` makes one real read-only Codex synthesis from a tiny generated transcript, verifies that a private checkpoint appears, touches no vault, and removes its temporary state afterward.
 
-The production plugin bundles the MCP server and review component. Its Windows launcher locates the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin does not require development dependencies.
+The production plugin bundles the MCP server and review component. Its Mac and Windows launchers locate the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin does not require development dependencies.
 
 ## Personal installation
 
-From the repository root, register the repository marketplace and install Patchouli:
+Build on the target platform before registering the repository marketplace and installing Patchouli. On Mac:
 
-```powershell
-codex plugin marketplace add D:\Codex\workspaces\patchouli_knowledge_database
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+codex plugin marketplace add /absolute/path/to/patchouli_knowledge_database
 codex plugin add patchouli@personal
 ```
+
+On Windows, use the same commands with the native repository path, for example `D:\Codex\workspaces\patchouli_knowledge_database`. Read the repository marketplace name before installing; resolve an existing marketplace-name collision instead of replacing unrelated registrations.
 
 Start a new Codex task after installation so it loads the newly enabled skill, bundled MCP server, and Hook. Review and trust the Patchouli Hook when Codex prompts you, or inspect it with `/hooks`. In that task, ask Patchouli to configure an existing absolute vault path and optionally a relative cards directory:
 
 ```text
-Configure Patchouli to use D:\path\to\my-vault with cards in Patchouli.
+Configure Patchouli to use /Users/me/Documents/My Vault with cards directly in Engineering.
 ```
+
+An explicitly named folder is the exact destination: this example uses `cardsDirectory: "Engineering"`, and saves cards directly in `Engineering/`. Do not add a `Patchouli` subfolder. The default `Patchouli` directory applies only when no card folder was specified. If the user supplies an absolute folder inside an existing vault, use the actual vault root and that folder's relative path.
 
 Then use either `$patchouli` or a focused natural-language request to capture or query knowledge. A capture always stops for review before the write. Local marketplace installs run from Codex's plugin cache, so reinstall the plugin after changing a packaged source, skill, UI, or distributable.
 
@@ -203,14 +212,23 @@ $patchouli launch
 
 The visible `🌿` acknowledgement means future pre-compaction checkpoints are active for that task. It does not mean a card has been saved.
 
-## Windows and Obsidian notes
+## Platform and Obsidian notes
 
-- V1's bundled launcher targets native Windows. WSL, macOS, and Linux launchers remain out of scope.
-- Patchouli keeps exactly one active vault configuration at `%APPDATA%\Patchouli\configuration.json`; configuring another vault replaces that pointer but never edits or removes cards in the previous vault.
+- `pnpm build` writes `.mcp.json` for the current platform: `/bin/sh` with the Mac launcher or `cmd.exe` with the Windows launcher. Both launcher sets and the shared runtime ship together. `PATCHOULI_BUILD_PLATFORM=darwin` or `win32` can explicitly choose a distribution target; run tests on that target before installing. Do not install a Mac entry point on Windows or vice versa.
+- Patchouli keeps exactly one active vault configuration; configuring another vault replaces that pointer but never edits or removes cards in the previous vault. Mac data lives in `~/Library/Application Support/Patchouli/`; Windows data lives in `%APPDATA%\Patchouli\`. Each contains `configuration.json` and private `session-checkpoints/`.
+- `PATCHOULI_DATA_ROOT` is an optional absolute data-root override for isolated testing. `PATCHOULI_CHECKPOINT_ROOT` optionally overrides only checkpoint storage. MCP and hooks must receive matching overrides. These are not required for ordinary use.
+- Mac launchers use Codex runtime hints, the bundled runtime cache, standard Codex/ChatGPT app locations, and finally `PATH`. Set `CODEX_MCP_NODE_PATH` and `CODEX_CLI_PATH` for nonstandard app locations. No shell startup files or Homebrew installation are required.
+- Filenames remain Windows-portable and also respect Mac UTF-8 byte limits. Containment checks use real filesystem paths; case-sensitive sibling folders and symlinks cannot bypass the configured cards directory. Case-only updates preserve the current filename when the volume resolves both spellings to the same file.
 - Patchouli accepts an existing writable folder even when it is not registered with Obsidian. Register that folder through Obsidian's vault manager before expecting Obsidian URI links or UI automation to open it.
 - Obsidian renders the saved `$...$` and `$$...$$` notation with MathJax and derives backlinks from the saved wikilinks. Patchouli stores only the Markdown source.
 - Automated Obsidian CLI checks require the Obsidian 1.12.7-or-newer installer and the CLI option enabled. Older desktop builds can still read Patchouli cards, but vault registration and visual checks use the Obsidian UI.
 - When a host does not render the inline MCP App, Patchouli presents the same editable draft conversationally and still requires explicit confirmation.
+
+## Additional Mac verification
+
+`pnpm test` includes platform tests and a fixed card/search/wikilink baseline from the committed Windows distribution. Native Windows testing is separate from checking Windows branches on a Mac. To exercise another mounted filesystem, run the suite with `TMPDIR` pointing to a disposable directory on that volume.
+
+For interactive review verification, run `node plugins/patchouli/scripts/inspect-review.mjs` and open the printed localhost URL. The harness uses the real MCP server, a temporary vault and synthetic cards, and retains that fixture directory for Obsidian inspection. Stop the process and remove its printed temporary root when finished. Set `PATCHOULI_SMOKE_PLUGIN_ROOT` to test an installed package with the smoke scripts or review harness.
 
 ## Development governance
 

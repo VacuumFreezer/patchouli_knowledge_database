@@ -46,19 +46,18 @@ server.registerResource(
   }),
 );
 
-registerPatchouliTools(server, {
-  engine: new VaultCardEngine(),
-  previews: new PendingPreviewStore<SavedCard, PreviewContext>({ ttlMs: previewTtlFromEnvironment() }),
-  checkpoints: new CheckpointStore(),
-});
-
 async function main(): Promise<void> {
+  registerPatchouliTools(server, {
+    engine: new VaultCardEngine(),
+    previews: new PendingPreviewStore<SavedCard, PreviewContext>({ ttlMs: previewTtlFromEnvironment() }),
+    checkpoints: new CheckpointStore(),
+  });
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
 main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.stack ?? error.message : String(error);
+  const message = error instanceof Error ? error.message : String(error);
   process.stderr.write(`Patchouli MCP server failed: ${message}\n`);
   process.exitCode = 1;
 });
