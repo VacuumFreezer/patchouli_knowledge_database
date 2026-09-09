@@ -18,15 +18,23 @@ test("validates the discoverable skill package and local MCP dependency", () => 
   assert.match(validation.stdout, /validation passed/u);
 });
 
-test("routes capture and inquiry through focused references with safe tool ordering", async () => {
+test("routes launch, capture, update, and inquiry through focused references with safe tool ordering", async () => {
   const skill = await readFile(path.join(skillRoot, "SKILL.md"), "utf8");
+  const launch = await readFile(path.join(skillRoot, "references", "launch.md"), "utf8");
   const capture = await readFile(path.join(skillRoot, "references", "capture.md"), "utf8");
+  const update = await readFile(path.join(skillRoot, "references", "update.md"), "utf8");
   const inquiry = await readFile(path.join(skillRoot, "references", "inquiry.md"), "utf8");
 
   assert.match(skill, /references\/capture\.md/u);
+  assert.match(skill, /references\/launch\.md/u);
   assert.match(skill, /references\/inquiry\.md/u);
   assert.ok(capture.indexOf("`suggest_links`") < capture.indexOf("`preview_card`"));
   assert.ok(capture.indexOf("`preview_card`") < capture.indexOf("`save_card`"));
+  assert.match(launch, /`launch_patchouli`/u);
+  assert.match(launch, /🌿 Patchouli capture active/u);
+  assert.match(skill, /MUST begin[\s\S]*# 🌿 Patchouli capture active/u);
+  assert.match(update, /`preview_card_update`[\s\S]*`update_card`/u);
+  assert.match(update, /REVISION_CONFLICT/u);
   assert.ok(inquiry.indexOf("`search_cards`") < inquiry.indexOf("`get_card`"));
   assert.doesNotMatch(inquiry, /call `save_card`/iu);
 });
@@ -57,4 +65,6 @@ test("metadata supports direct and implicit invocation without broad activation"
   assert.match(description, /save|condense|remember/iu);
   assert.match(description, /knowledge base|knowledge vault/iu);
   assert.match(description, /Do not use for an ordinary summary/iu);
+  assert.match(description, /\$patchouli launch/iu);
+  assert.match(description, /casual mention/iu);
 });

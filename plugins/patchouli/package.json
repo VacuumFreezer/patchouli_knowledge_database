@@ -1,6 +1,6 @@
 {
   "name": "@patchouli/plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -12,7 +12,8 @@
     "test": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\test.mjs",
     "validate:skill": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\validate-skill.mjs",
     "verify:bundle": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\verify-bundle.mjs",
-    "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs"
+    "smoke:mcp": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-mcp.mjs",
+    "smoke:hook": "cmd.exe /d /s /c call .\\scripts\\run-with-codex-node.cmd .\\scripts\\smoke-hook.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

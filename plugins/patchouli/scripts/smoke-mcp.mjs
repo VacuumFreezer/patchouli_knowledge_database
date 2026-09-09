@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const sourcePluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const pluginRoot = path.resolve(process.env.PATCHOULI_SMOKE_PLUGIN_ROOT || sourcePluginRoot);
 const transport = new StdioClientTransport({
   command: "cmd.exe",
   args: [
@@ -25,19 +26,26 @@ try {
   if (!Array.isArray(result.tools)) throw new Error("tools/list did not return an array");
   const expectedTools = [
     "configure_vault",
+    "discard_checkpoint_drafts",
     "get_card",
+    "get_checkpoint_drafts",
     "get_configuration",
+    "get_patchouli_status",
+    "launch_patchouli",
     "list_categories",
     "preview_card",
+    "preview_card_update",
     "save_card",
     "search_cards",
+    "stop_patchouli",
     "suggest_links",
+    "update_card",
   ];
   const actualTools = result.tools.map((tool) => tool.name).sort();
   if (JSON.stringify(actualTools) !== JSON.stringify(expectedTools)) {
-    throw new Error(`Stage 4 tool catalog mismatch: ${actualTools.join(", ")}`);
+    throw new Error(`Stage 7 tool catalog mismatch: ${actualTools.join(", ")}`);
   }
-  console.log("MCP initialization and tools/list passed (8 Stage 4 tools).");
+  console.log("MCP initialization and tools/list passed (15 Stage 7 tools).");
 } finally {
   await client.close();
 }

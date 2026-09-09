@@ -56,6 +56,7 @@ const result = await build({
   entryPoints: {
     server: path.join(pluginRoot, "src", "server.ts"),
     core: path.join(pluginRoot, "src", "core", "index.ts"),
+    hook: path.join(pluginRoot, "src", "hook.ts"),
   },
   outdir: distDirectory,
   entryNames: "[name]",

@@ -16,6 +16,8 @@
         "CODEX_BROWSER_USE_NODE_PATH",
         "CODEX_ELECTRON_RESOURCES_PATH",
         "CODEX_CLI_PATH",
+        "CODEX_THREAD_ID",
+        "CODEX_SESSION_ID",
         "APPDATA",
         "USERPROFILE",
         "LOCALAPPDATA",

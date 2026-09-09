@@ -1,6 +1,6 @@
 {
   "name": "patchouli",
-  "version": "0.1.0",
+  "version": "0.2.0+codex.20260909060138",
   "description": "Build and query a local Obsidian knowledge database from Codex learning sessions.",
   "author": {
     "name": "Patchouli Project"

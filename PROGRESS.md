@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-08T13:24:42-04:00
+Last updated: 2026-09-09T02:01:57-04:00
 
 ## How this tracker is used
 
@@ -22,6 +22,7 @@ Last updated: 2026-09-08T13:24:42-04:00
 | 4. MCP tools and capture review | Expose the tool contracts and editable inline confirmation workflow. | Complete | 2026-09-04T02:48:41-04:00 | 2026-09-04T03:11:33-04:00 |
 | 5. Patchouli agent workflow | Implement capture and inquiry behavior with untrusted-input boundaries. | Complete | 2026-09-06T17:41:22-04:00 | 2026-09-06T17:48:56-04:00 |
 | 6. Inquiry, validation, and installation | Validate, install, and smoke-test the personal plugin with Codex and Obsidian. | Complete | 2026-09-08T12:41:10-04:00 | 2026-09-08T13:24:42-04:00 |
+| 7. Compaction-safe capture and card evolution | Update existing cards and preserve pre-compaction technical detail through explicitly launched checkpoint drafts. | Complete | 2026-09-08T15:40:04-04:00 | 2026-09-08T16:58:18-04:00 |
 
 ## Active cross-stage revision
 
@@ -192,6 +193,55 @@ The repository marketplace was registered as `personal` and `patchouli@personal`
 
 Disk and MCP reads confirmed two UUID-frontmatter cards with categories, Summary, concrete Detail, concise paraphrased evidence, sources, five display-math blocks, and one outgoing `[[Bayesian belief updating|Bayesian belief updating]]` link; no retired sections, injected instruction text, or transcript were stored. Obsidian v1.5.3 loaded the vault through an isolated profile, opened both cards in reading mode, rendered 25 and 28 MathJax nodes (including four and two display nodes), exposed the outgoing internal link, and derived `Patchouli/Beta–Bernoulli conjugate updating.md` as the backlink to `Patchouli/Bayesian belief updating.md`. Screenshots recorded the rendered properties, headings, inline/display math, and one-backlink indicator. The installed plugin returned both cards from lexical search; a supported inquiry called `search_cards` followed by `get_card` for both results and cited both wikilinks, while an unrelated heliopause inquiry reported that the vault lacked evidence. The README now records the personal install flow and remaining Windows/Obsidian limitations.
 
+## Stage 7 — Compaction-safe capture and card evolution
+
+**Goal:** Allow an explicitly launched Patchouli session to preserve technical knowledge across context compaction, then use the preserved drafts and the continued conversation to safely update existing cards and create newly justified cards.
+
+**Status:** Complete — started 2026-09-08T15:40:04-04:00; completed 2026-09-08T16:58:18-04:00.
+
+### Planned implementation
+
+- [x] Mark Stage 7 In progress only after explicit authorization from the user.
+- [x] Begin with a feasibility gate against the installed Codex version: verify that plugins can register a supported pre-compaction lifecycle hook, that the hook receives a stable task/conversation identity and sufficient pre-compaction context, and that it can request synthesis through the active Codex model without an OpenAI API key. If any required host capability is unavailable, record the exact blocker instead of emulating an unreliable hook.
+- [x] Document the Stage 7 architecture, transient-draft lifecycle, privacy boundary, update semantics, hook contract, and revised development commands before editing runtime source.
+- [x] Add an explicit launch route recognized only from `$patchouli launch` or a clear natural-language equivalent; ordinary capture and inquiry requests must not silently enable compaction tracking.
+- [x] Bind launch state to the current Codex task, make repeated launches idempotent, allow launch at any point in the conversation, and define explicit stop/status behavior plus task-end cleanup.
+- [x] Return a prominent, stable launch acknowledgement such as `🌿 Patchouli capture active`, together with a plain-language explanation that pre-compaction drafts will be created but no card will be saved automatically.
+- [x] Register the supported pre-compaction hook only for a launched task and guarantee that an unlaunched task produces no checkpoint data or vault writes.
+- [x] At each pre-compaction event, use the conversation still available to Codex to create a structured checkpoint `CardDraft` without opening the review UI, issuing a save token, or creating/updating an Obsidian card.
+- [x] Preserve concrete technical detail, formulas, assumptions, decisions, source attribution, and unresolved questions in checkpoint drafts while continuing to paraphrase and treat conversation content as untrusted data rather than instructions.
+- [x] Store checkpoint drafts atomically in a bounded, task-isolated transient workspace outside the Obsidian vault, with launch ID, checkpoint ID, sequence, timestamps, covered-context metadata, schema version, and integrity data; this store is recoverable working state, not a second knowledge database.
+- [x] Handle repeated compactions deterministically, avoid duplicating already checkpointed material, isolate simultaneous tasks, survive MCP process restarts, and prevent path traversal, cross-task reads, malformed payloads, and unbounded draft growth.
+- [x] Extend final capture so it loads every applicable checkpoint draft plus the current post-compaction context before deciding whether knowledge belongs in an existing card, a new card, or multiple sequential cards.
+- [x] Match update candidates by stable card UUID/reference rather than title alone, retrieve the current card before proposing changes, and preserve creation identity and unrelated user edits.
+- [x] Add a dedicated reviewed-update contract and reuse the inline/conversational preview experience so the user can inspect the complete proposed replacement, including merged Summary, Detail, evidence, sources, categories, and connections.
+- [x] Apply confirmed updates with atomic replacement, optimistic revision/fingerprint checks, collision protection, and rollback-safe failure handling; never overwrite a card that changed after preview.
+- [x] Continue to preview and confirm each newly proposed card separately, and preserve the existing rule that unrelated concepts become sequential reviews rather than one overloaded final card.
+- [x] Track exactly which checkpoint drafts contributed to each proposed update or new card. Retain drafts after preview cancellation, validation failure, revision conflict, or save failure; delete only the drafts consumed by successfully confirmed final cards, leaving unrelated or unconsumed drafts available.
+- [x] Expose a clear user-controlled way to inspect and discard outstanding checkpoint drafts without treating draft text as a saved knowledge card.
+- [x] Update the skill, MCP schemas and annotations, inline UI, bundled runtime, README, card/update metadata, and personal installation package while preserving conversational fallbacks and Windows-first local-only operation.
+
+### Planned test scripts and coverage
+
+- [x] Add a focused Stage 7 card-update test script covering UUID preservation, creation/update timestamps, title changes, filename collisions, optimistic conflicts, atomic-replace failure, rollback behavior, manually edited cards, and proof that unrelated existing files are unchanged.
+- [x] Add a focused Stage 7 hook test script with synthetic lifecycle events covering no-launch/no-hook behavior, explicit and natural-language launch, launch at different conversation positions, idempotent relaunch, visible `🌿` acknowledgement, stop/status behavior, and task isolation.
+- [x] Test that the hook creates drafts but no preview token, UI request, vault card, or card update; verify formulas, technical qualifications, sources, and prompt-injection text are preserved or rejected according to the capture trust boundary without storing a verbatim transcript.
+- [x] Test multiple compactions, duplicate event delivery, out-of-order events, process restart, corrupted or oversized checkpoint data, storage bounds, and deterministic recovery.
+- [x] Add temporary-vault integration tests for `launch → checkpoint → compacted continuation → update existing card and/or propose new cards → preview → confirm → save → consume drafts`.
+- [x] Verify that cancellation and all failed saves retain checkpoint drafts, successful confirmation deletes only consumed drafts, and a later capture cannot read drafts belonging to another task.
+- [x] Test mixed outcomes in a multi-topic conversation: an existing card update, a newly justified sequential card, an unchanged unrelated card, and retention of any checkpoint draft not yet represented by a confirmed card.
+- [x] Add an installed-plugin smoke script that exercises the real Codex hook when supported, plus a deterministic fixture-based hook inspector for CI; run the complete existing unit, integration, UI, type-check, bundle, manifest, skill, MCP Inspector, and Obsidian-compatibility suites to detect regressions.
+
+**Exit criterion:** After explicit launch in a real Codex task, Patchouli creates no automatic vault card but preserves pre-compaction technical detail in isolated checkpoint drafts; a later capture can safely update an existing reviewed card and create separately reviewed new cards from those drafts plus the continued conversation; consumed drafts are deleted only after successful user confirmation, and the full regression and installed-plugin smoke suites pass.
+
+**Evidence:** Feasibility was confirmed against Codex CLI `0.153.4`: the stable plugin Hook system supports `PreCompact` with `auto|manual` matching and supplies `session_id`, `transcript_path`, `turn_id`, `trigger`, and model context; plugin hooks receive `PLUGIN_ROOT`, and a bundled command hook can invoke an ephemeral, read-only `codex exec` through the signed-in Codex account without a separate OpenAI API key. Patchouli registers `PreCompact` plus bounded `SessionEnd` cleanup in the default `hooks/hooks.json` location and uses the Codex-bundled Node launcher on Windows.
+
+The final implementation exposes fifteen local MCP tools, including explicit launch/status/stop, checkpoint inspection/discard, create review/save, and update review/save. Private state is hashed by task and bounded to 4 MiB/eight coherent drafts with launch/checkpoint IDs, sequence, timestamps, transcript digest, draft revision, duplicate-event suppression, lock-based restart safety, and stale out-of-order completion rejection. Transcript parsing admits only user/assistant message text, removes ambient host blocks, caps input, JSON-encodes the untrusted boundary, and emits a fixed content-free warning if synthesis fails. Updates preserve UUID, `created_at`, custom frontmatter, and custom sections; set `updated_at`; use exact revision checks, atomic replacement/rollback, title-derived filenames, and collision protection. Review tokens bind the operation, task, target revision, and exact checkpoint revisions, which are consumed only after a successful confirmed create/update.
+
+Node `v24.19.0` and pnpm `11.19.0` completed type checking and 46/46 unit, temporary-vault integration, MCP protocol, hook lifecycle, transcript/privacy, update/conflict, packaging, skill, and jsdom UI tests. Repository and canonical plugin-creator validation passed; bundle verification covered four self-contained files with no external runtime packages or scripts; `git diff --check` passed. Official MCP Inspector CLI successfully initialized the installed server and listed all fifteen typed local tools with their annotations and MCP App metadata. The deterministic hook suite covered inactive tasks, repeated/multiple and out-of-order compactions, process boundaries, task isolation, malformed/oversized state, selective consumption, retained previews/failures, and session cleanup. A real-model `pnpm inspect:hook` run against the installed plugin generated one private checkpoint from a tiny temporary transcript, configured no vault, wrote no card, and deleted all temporary state.
+
+The personal marketplace remained `personal`; `patchouli@personal` `0.2.0+codex.stage7-final4` was installed and enabled at `D:\Codex\home\plugins\cache\personal\patchouli\0.2.0+codex.stage7-final4`. Its bundled MCP and real Hook smoke tests passed. Isolated Codex task `01a082c7-2065-7170-bbaa-27b4940fecb6` invoked `$patchouli launch`, returned the prominent `🌿 Patchouli capture active` acknowledgement with `active: true` and zero checkpoints, and created or updated no vault card. Temporary-vault integration then exercised one continued-conversation update plus one sequential new card: the update preserved identity/timestamps, the rename removed the old reference, the first confirmation consumed only its own checkpoint, the second preview retained the unrelated checkpoint until its confirmed save, identical retries were idempotent, and a concurrent manual edit produced `REVISION_CONFLICT` without overwriting the file. The saved Markdown contract remains the Stage 6 Obsidian-compatible Summary/Detail/MathJax/wikilink format. In a newly opened Codex task, the user must review/trust the changed Patchouli Hook when prompted before automatic lifecycle delivery can run.
+
 ## V1 acceptance checklist
 
 - [x] The active conversation or pasted text can become one reviewed Markdown card.
@@ -201,7 +251,7 @@ Disk and MCP reads confirmed two UUID-frontmatter cards with categories, Summary
 - [x] Evidence is concise, paraphrased, and tied to original source material rather than copied from the dialogue.
 - [x] The vault is the only durable knowledge database.
 - [x] Search and link suggestions work locally without embeddings.
-- [x] Existing cards cannot be overwritten by capture.
+- [x] Existing cards cannot be overwritten by new-card capture and can change only through an exact-revision update preview plus explicit confirmation.
 - [x] Path traversal and symlink escape cannot write outside the configured cards directory.
 - [x] Inquiries cite cards and disclose insufficient evidence.
 - [x] The installed plugin works without an OpenAI API key or runtime `node_modules`.
@@ -210,10 +260,19 @@ Disk and MCP reads confirmed two UUID-frontmatter cards with categories, Summary
 
 - PDF, webpage, repository/code, Xiaohongshu, and YouTube ingestion pipelines.
 - Multiple saved vault profiles.
-- Existing-card update or merge workflows.
 - Hosted MCP, authentication, vector search, and cloud synchronization.
 - macOS, Linux, and WSL launcher support.
 
+## Stage 7 follow-up — Retain unsaved checkpoint drafts
+
+**Status:** Complete — implementation, verification, and installed-version activation confirmed at 2026-09-09T01:57:35-04:00.
+
+**Correction:** `SessionEnd` now deactivates capture without deleting its state or drafts. Same-task reads and explicit relaunch preserve checkpoint identity and content. Automatic consumption still requires a successful user-confirmed create/update and removes only the revisions attached to that review.
+
+**Evidence:** Type checking, all 46 tests, repository and canonical plugin/skill validation, and bundle verification passed. The initial full run hit a transient Windows `EPERM` during an existing atomic-replace test; the isolated rerun and full rerun passed. Lifecycle tests cover repeated session termination, fresh store access, inactive pre-compaction events, and relaunch. MCP integration covers session end, failed create retention, and selective successful update/create consumption. The new cached Hook passed all six Stage 7 tests and the cached MCP server listed all fifteen tools; hook/core/server/launch-reference SHA-256 values match the source artifacts.
+
+**Installation:** The earlier cache activation attempts encountered Windows access denial. Follow-up verification at 2026-09-09T01:57:35-04:00 confirmed that `codex plugin list` now reports `0.2.0+codex.20260909054855` installed and enabled, and the current task's skill catalog references that version. SHA-256 comparisons of the installed Hook, core, server, hook configuration, and launch reference all match the verified repository artifacts. The activation blocker is resolved; no further reinstall was needed.
+
 ## Current next action
 
-Patchouli personal v1 is complete. Use it from a new Codex task with `$patchouli` or a focused natural-language capture/inquiry request; pursue deferred ingestion and cross-platform work only as later stages.
+Use installed version `0.2.0+codex.20260909060138`, confirmed enabled at 2026-09-09T02:01:57-04:00. The second Hook now uses `Discard draft` as its supported `statusMessage`; `SessionEnd` remains its lifecycle event. Repository and canonical plugin validation passed, the installed label was checked, and its runtime hash matches the tested retention fix. Review/trust the updated Hook if Codex prompts; session end still stops capture while retaining outstanding drafts for later reviewed capture in the same task.

@@ -7,6 +7,7 @@ const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".
 const bundlePaths = [
   path.join(pluginRoot, "dist", "server.mjs"),
   path.join(pluginRoot, "dist", "core.mjs"),
+  path.join(pluginRoot, "dist", "hook.mjs"),
 ];
 const reviewAppPath = path.join(pluginRoot, "dist", "review-app.html");
 const metadataPath = path.join(pluginRoot, "dist", "meta.json");

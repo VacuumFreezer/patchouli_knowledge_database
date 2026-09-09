@@ -1,22 +1,31 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { CheckpointStore } from "../dist/core.mjs";
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const expectedTools = [
   "configure_vault",
+  "discard_checkpoint_drafts",
   "get_card",
+  "get_checkpoint_drafts",
   "get_configuration",
+  "get_patchouli_status",
+  "launch_patchouli",
   "list_categories",
   "preview_card",
+  "preview_card_update",
   "save_card",
   "search_cards",
+  "stop_patchouli",
   "suggest_links",
+  "update_card",
 ];
 
 function draft(title = "Reviewed Capture") {
@@ -35,6 +44,7 @@ async function fixture(context, ttlMs) {
   const root = await mkdtemp(path.join(tmpdir(), "patchouli-mcp-"));
   const vault = path.join(root, "vault");
   const appData = path.join(root, "appdata");
+  const sessionId = `test-${path.basename(root)}`;
   await mkdir(path.join(vault, ".obsidian"), { recursive: true });
   await mkdir(appData, { recursive: true });
 
@@ -45,6 +55,7 @@ async function fixture(context, ttlMs) {
     env: {
       ...process.env,
       APPDATA: appData,
+      PATCHOULI_SESSION_ID: sessionId,
       ...(ttlMs ? { PATCHOULI_PREVIEW_TTL_MS: String(ttlMs) } : {}),
     },
     stderr: "pipe",
@@ -55,7 +66,7 @@ async function fixture(context, ttlMs) {
     await client.close();
     await rm(root, { recursive: true, force: true });
   });
-  return { client, vault };
+  return { client, vault, appData, sessionId };
 }
 
 function structured(result) {
@@ -63,7 +74,7 @@ function structured(result) {
   return result.structuredContent;
 }
 
-test("advertises eight explicit contracts, accurate annotations, and the MCP App resource", async (context) => {
+test("advertises fifteen explicit contracts, accurate annotations, and the MCP App resource", async (context) => {
   const { client } = await fixture(context);
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), expectedTools);
@@ -81,6 +92,8 @@ test("advertises eight explicit contracts, accurate annotations, and the MCP App
   assert.equal(listed.tools.find((tool) => tool.name === "save_card").annotations.readOnlyHint, false);
   assert.equal(listed.tools.find((tool) => tool.name === "save_card").annotations.idempotentHint, true);
   assert.equal(listed.tools.find((tool) => tool.name === "preview_card").annotations.readOnlyHint, true);
+  assert.equal(listed.tools.find((tool) => tool.name === "update_card").annotations.destructiveHint, true);
+  assert.equal(listed.tools.find((tool) => tool.name === "discard_checkpoint_drafts").annotations.destructiveHint, true);
   const draftProperties = listed.tools.find((tool) => tool.name === "preview_card")
     .inputSchema.properties.draft.properties;
   assert.ok(draftProperties.summaryMarkdown);
@@ -98,6 +111,7 @@ test("advertises eight explicit contracts, accurate annotations, and the MCP App
   assert.match(resource.contents[0].text, /ui\/initialize/u);
   assert.match(resource.contents[0].text, /tools\/call/u);
   assert.match(resource.contents[0].text, /Save card/u);
+  assert.match(resource.contents[0].text, /Update card/u);
 });
 
 test("runs configuration, preview, confirmed save, idempotent replay, search, and read end to end", async (context) => {
@@ -245,4 +259,139 @@ test("expires abandoned preview tokens without writing a card", async (context) 
   assert.equal(result.isError, true);
   assert.equal(structured(result).error.code, "TOKEN_EXPIRED");
   await assert.rejects(readFile(path.join(vault, "Patchouli", "Expired Draft.md"), "utf8"), /ENOENT/u);
+});
+
+test("launches task capture, updates an exact card revision, and consumes only confirmed checkpoints", async (context) => {
+  const { client, vault, appData, sessionId } = await fixture(context);
+  await client.callTool({ name: "configure_vault", arguments: { vaultPath: vault } });
+
+  const launchedResult = await client.callTool({ name: "launch_patchouli", arguments: {} });
+  const launched = structured(launchedResult);
+  assert.equal(launched.status.active, true);
+  assert.equal(launched.indicator, "🌿 Patchouli capture active");
+  assert.match(launchedResult.content[0].text, /🌿 Patchouli capture active/u);
+
+  const initialPreview = structured(await client.callTool({
+    name: "preview_card",
+    arguments: { draft: draft("Evolving Concept") },
+  })).preview;
+  const initial = structured(await client.callTool({
+    name: "save_card",
+    arguments: { pendingToken: initialPreview.pendingToken, draft: draft("Evolving Concept") },
+  })).card;
+
+  const checkpointStore = new CheckpointStore({
+    root: path.join(appData, "Patchouli", "session-checkpoints"),
+  });
+  const replacement = await checkpointStore.replaceFromCompaction(sessionId, {
+    trigger: "auto",
+    turnId: "turn-2",
+    model: "test-model",
+    messageCount: 12,
+    transcriptDigest: "a".repeat(64),
+    generationStartedAtMs: Date.now(),
+    drafts: [draft("Evolving Concept"), draft("A New Topic")],
+  });
+  const checkpoint = replacement.checkpoints[0];
+  const ended = spawnSync(process.execPath, [path.join(pluginRoot, "dist", "hook.mjs"), "session-end"], {
+    input: JSON.stringify({ session_id: sessionId }),
+    encoding: "utf8",
+    env: { ...process.env, PATCHOULI_CHECKPOINT_ROOT: checkpointStore.root },
+  });
+  assert.equal(ended.status, 0, ended.stderr || ended.stdout);
+  assert.equal(ended.stdout, "");
+  assert.equal(structured(await client.callTool({ name: "get_patchouli_status", arguments: {} })).status.active, false);
+  assert.deepEqual(structured(await client.callTool({ name: "get_checkpoint_drafts", arguments: {} })).checkpoints, replacement.checkpoints);
+
+  // A failed create after session end must retain both the referenced and unrelated drafts.
+  const collisionPreview = structured(await client.callTool({
+    name: "preview_card",
+    arguments: {
+      draft: draft("Evolving Concept"),
+      checkpointRefs: [{ checkpointId: checkpoint.checkpointId, revision: checkpoint.revision }],
+    },
+  })).preview;
+  const collisionSave = await client.callTool({
+    name: "save_card",
+    arguments: { pendingToken: collisionPreview.pendingToken, draft: draft("Evolving Concept") },
+  });
+  assert.equal(collisionSave.isError, true);
+  assert.deepEqual(await checkpointStore.list(sessionId), replacement.checkpoints);
+  const beforeUpdate = structured(await client.callTool({
+    name: "get_card",
+    arguments: { cardRef: initial.cardRef },
+  })).card;
+  const updatedDraft = {
+    ...draft("Evolved Concept"),
+    summaryMarkdown: "A refined summary after the conversation continued.",
+    detailMarkdown: "The prior detail remains, while the checkpoint adds a concrete refinement with $x+1$.",
+  };
+  const updatePreview = structured(await client.callTool({
+    name: "preview_card_update",
+    arguments: {
+      cardRef: beforeUpdate.cardRef,
+      expectedRevision: beforeUpdate.revision,
+      draft: updatedDraft,
+      checkpointRefs: [{ checkpointId: checkpoint.checkpointId, revision: checkpoint.revision }],
+    },
+  })).preview;
+  assert.equal(updatePreview.operation, "update");
+  assert.equal(updatePreview.destination.renamed, true);
+
+  const update = structured(await client.callTool({
+    name: "update_card",
+    arguments: { pendingToken: updatePreview.pendingToken, draft: updatedDraft },
+  }));
+  assert.equal(update.ok, true);
+  assert.equal(update.previousCardRef, initial.cardRef);
+  assert.equal(update.card.id, initial.id);
+  assert.equal(update.card.createdAt, initial.createdAt);
+  assert.ok(update.card.updatedAt);
+  assert.notEqual(update.card.revision, beforeUpdate.revision);
+  const remaining = structured(await client.callTool({ name: "get_checkpoint_drafts", arguments: {} })).checkpoints;
+  assert.deepEqual(remaining.map((item) => item.draft.title), ["A New Topic"]);
+  await assert.rejects(readFile(path.join(vault, initial.cardRef), "utf8"), /ENOENT/u);
+
+  const replay = structured(await client.callTool({
+    name: "update_card",
+    arguments: { pendingToken: updatePreview.pendingToken, draft: updatedDraft },
+  }));
+  assert.equal(replay.idempotentReplay, true);
+
+  const newCardDraft = draft("A New Topic");
+  const newPreview = structured(await client.callTool({
+    name: "preview_card",
+    arguments: {
+      draft: newCardDraft,
+      checkpointRefs: [{ checkpointId: remaining[0].checkpointId, revision: remaining[0].revision }],
+    },
+  })).preview;
+  assert.equal((structured(await client.callTool({ name: "get_checkpoint_drafts", arguments: {} }))).checkpoints.length, 1);
+  const newCard = structured(await client.callTool({
+    name: "save_card",
+    arguments: { pendingToken: newPreview.pendingToken, draft: newCardDraft },
+  })).card;
+  assert.equal(newCard.title, "A New Topic");
+  assert.equal((structured(await client.callTool({ name: "get_checkpoint_drafts", arguments: {} }))).checkpoints.length, 0);
+
+  const conflictPreview = structured(await client.callTool({
+    name: "preview_card_update",
+    arguments: {
+      cardRef: update.card.cardRef,
+      expectedRevision: update.card.revision,
+      draft: { ...updatedDraft, summaryMarkdown: "Would overwrite a manual edit." },
+    },
+  })).preview;
+  const updatedPath = path.join(vault, update.card.cardRef);
+  await writeFile(updatedPath, `${await readFile(updatedPath, "utf8")}\nManual concurrent note.\n`, "utf8");
+  const conflict = await client.callTool({
+    name: "update_card",
+    arguments: {
+      pendingToken: conflictPreview.pendingToken,
+      draft: (({ filename: _filename, ...reviewedDraft }) => reviewedDraft)(conflictPreview.draft),
+    },
+  });
+  assert.equal(conflict.isError, true);
+  assert.equal(structured(conflict).error.code, "REVISION_CONFLICT");
+  assert.match(await readFile(updatedPath, "utf8"), /Manual concurrent note/u);
 });

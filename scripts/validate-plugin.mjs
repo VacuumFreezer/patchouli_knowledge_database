@@ -6,6 +6,7 @@ const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const marketplacePath = path.join(workspaceRoot, ".agents", "plugins", "marketplace.json");
 const pluginRoot = path.join(workspaceRoot, "plugins", "patchouli");
 const manifestPath = path.join(pluginRoot, ".codex-plugin", "plugin.json");
+const hooksPath = path.join(pluginRoot, "hooks", "hooks.json");
 
 const failures = [];
 
@@ -33,9 +34,10 @@ async function exists(relativePath) {
 
 const manifest = await readJson(manifestPath);
 const marketplace = await readJson(marketplacePath);
+const hooks = await readJson(hooksPath);
 
 check(manifest.name === "patchouli", "manifest name must be patchouli");
-check(/^\d+\.\d+\.\d+$/.test(manifest.version ?? ""), "manifest version must be strict semver");
+check(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(manifest.version ?? ""), "manifest version must be strict semver");
 check(typeof manifest.description === "string" && manifest.description.length > 0, "manifest description is required");
 check(manifest.author?.name === "Patchouli Project", "manifest author must be Patchouli Project");
 check(manifest.license === "UNLICENSED", "manifest license must be UNLICENSED");
@@ -45,6 +47,13 @@ check(manifest.skills === "./skills/", "manifest skills path must be ./skills/")
 check(manifest.mcpServers === "./.mcp.json", "manifest MCP path must be ./.mcp.json");
 check(!Object.hasOwn(manifest, "apps"), "apps must be omitted until .app.json exists");
 check(!Object.hasOwn(manifest, "hooks"), "unsupported hooks manifest field must be omitted");
+check(Array.isArray(hooks.hooks?.PreCompact), "default hooks/hooks.json must register PreCompact");
+check(Array.isArray(hooks.hooks?.SessionEnd), "default hooks/hooks.json must register SessionEnd cleanup");
+const preCompactHook = hooks.hooks?.PreCompact?.[0]?.hooks?.[0];
+check(preCompactHook?.type === "command", "PreCompact must use a command hook");
+check(/launch-patchouli-hook\.cmd/iu.test(preCompactHook?.commandWindows ?? ""), "PreCompact must use the bundled Windows runtime launcher");
+check(await exists("hooks/checkpoint-drafts.schema.json"), "checkpoint output schema must exist");
+check(await exists("scripts/launch-patchouli-hook.cmd"), "Windows hook launcher must exist");
 
 for (const field of ["skills", "mcpServers"]) {
   const target = manifest[field]?.replace(/^\.\//, "");

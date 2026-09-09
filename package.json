@@ -10,6 +10,7 @@
     "validate:skill": "pnpm --filter @patchouli/plugin validate:skill",
     "validate:plugin": "cmd.exe /d /s /c call .\\plugins\\patchouli\\scripts\\run-with-codex-node.cmd .\\scripts\\validate-plugin.mjs",
     "verify:bundle": "pnpm --filter @patchouli/plugin verify:bundle",
-    "inspect:mcp": "pnpm --filter @patchouli/plugin smoke:mcp"
+    "inspect:mcp": "pnpm --filter @patchouli/plugin smoke:mcp",
+    "inspect:hook": "pnpm --filter @patchouli/plugin smoke:hook"
   }
 }

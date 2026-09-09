@@ -3,8 +3,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { PatchouliError } from "../core/errors.js";
 import type { NormalizedCardDraft } from "../core/types.js";
 
-interface PendingRecord<T> {
+interface PendingRecord<T, M> {
   expiresAtMs: number;
+  metadata?: M;
   inFlight?: {
     digest: string;
     promise: Promise<T>;
@@ -35,11 +36,11 @@ function draftDigest(draft: NormalizedCardDraft): string {
   return createHash("sha256").update(JSON.stringify(draft), "utf8").digest("hex");
 }
 
-export class PendingPreviewStore<T> {
+export class PendingPreviewStore<T, M = undefined> {
   readonly ttlMs: number;
   readonly #now: () => number;
   readonly #tokenFactory: () => string;
-  readonly #records = new Map<string, PendingRecord<T>>();
+  readonly #records = new Map<string, PendingRecord<T, M>>();
 
   constructor(options: PendingPreviewStoreOptions = {}) {
     this.ttlMs = options.ttlMs ?? 15 * 60 * 1000;
@@ -50,12 +51,12 @@ export class PendingPreviewStore<T> {
     this.#tokenFactory = options.tokenFactory ?? (() => randomBytes(32).toString("base64url"));
   }
 
-  issue(): PendingPreview {
+  issue(metadata?: M): PendingPreview {
     this.#removeExpired();
     let pendingToken = this.#tokenFactory();
     while (this.#records.has(pendingToken)) pendingToken = this.#tokenFactory();
     const expiresAtMs = this.#now() + this.ttlMs;
-    this.#records.set(pendingToken, { expiresAtMs });
+    this.#records.set(pendingToken, { expiresAtMs, ...(metadata === undefined ? {} : { metadata }) });
     return {
       pendingToken,
       expiresAt: new Date(expiresAtMs).toISOString(),
@@ -65,7 +66,7 @@ export class PendingPreviewStore<T> {
   async save(
     pendingToken: string,
     draft: NormalizedCardDraft,
-    writer: () => Promise<T>,
+    writer: (metadata: M | undefined) => Promise<T>,
   ): Promise<SaveResolution<T>> {
     if (typeof pendingToken !== "string" || !/^[A-Za-z0-9_-]{32,128}$/u.test(pendingToken)) {
       throw new PatchouliError("TOKEN_INVALID", "The pending preview token is invalid.");
@@ -96,7 +97,7 @@ export class PendingPreviewStore<T> {
       return { value: await record.inFlight.promise, idempotentReplay: true };
     }
 
-    const promise = writer();
+    const promise = writer(record.metadata);
     record.inFlight = { digest, promise };
     try {
       const value = await promise;

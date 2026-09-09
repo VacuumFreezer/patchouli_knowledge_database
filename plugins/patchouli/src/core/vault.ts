@@ -2,7 +2,12 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { normalizeCardDraft, parseCard, renderCard } from "./cards.js";
+import {
+  extractCardUpdatePreservation,
+  normalizeCardDraft,
+  parseCard,
+  renderCard,
+} from "./cards.js";
 import { ConfigurationStore } from "./configuration.js";
 import { PatchouliError, isNodeError } from "./errors.js";
 import {
@@ -21,6 +26,7 @@ import type {
   SavedCard,
   SearchOptions,
   SearchResult,
+  UpdateInspection,
   VaultConfiguration,
 } from "./types.js";
 
@@ -28,9 +34,19 @@ export interface AtomicCreateOperations {
   promote(temporaryPath: string, destinationPath: string): Promise<void>;
 }
 
+export interface AtomicReplaceOperations {
+  promote(temporaryPath: string, destinationPath: string): Promise<void>;
+}
+
 const defaultAtomicCreateOperations: AtomicCreateOperations = {
   async promote(temporaryPath, destinationPath) {
     await fs.link(temporaryPath, destinationPath);
+  },
+};
+
+const defaultAtomicReplaceOperations: AtomicReplaceOperations = {
+  async promote(temporaryPath, destinationPath) {
+    await fs.rename(temporaryPath, destinationPath);
   },
 };
 
@@ -66,6 +82,31 @@ export async function atomicCreateFile(
     await fs.unlink(temporaryPath).catch((error: unknown) => {
       if (!promoted && (!isNodeError(error) || error.code !== "ENOENT")) throw error;
     });
+  }
+}
+
+export async function atomicReplaceFile(
+  destinationPath: string,
+  contents: string,
+  operations: AtomicReplaceOperations = defaultAtomicReplaceOperations,
+): Promise<void> {
+  const directory = path.dirname(destinationPath);
+  const temporaryPath = path.join(directory, `.patchouli-${randomUUID()}.tmp`);
+  let handle: fs.FileHandle | undefined;
+  try {
+    handle = await fs.open(temporaryPath, "wx", 0o600);
+    await handle.writeFile(contents, "utf8");
+    await handle.sync();
+    await handle.close();
+    handle = undefined;
+    await operations.promote(temporaryPath, destinationPath);
+  } catch (error: unknown) {
+    throw new PatchouliError("IO_ERROR", "The card update could not be committed atomically.", {
+      destinationPath,
+    }, { cause: error });
+  } finally {
+    await handle?.close().catch(() => undefined);
+    await fs.unlink(temporaryPath).catch(() => undefined);
   }
 }
 
@@ -205,6 +246,49 @@ export class VaultCardEngine {
     };
   }
 
+  async inspectCardUpdate(cardRef: string, expectedRevision: string, draft: CardDraft): Promise<UpdateInspection> {
+    const configuration = await this.configurationStore.requireConfiguration();
+    const target = await this.getCard(cardRef);
+    if (target.revision !== expectedRevision) {
+      throw new PatchouliError(
+        "REVISION_CONFLICT",
+        "The card changed after it was read. Reload it and prepare the update again.",
+        { cardRef: target.cardRef, expectedRevision, actualRevision: target.revision },
+      );
+    }
+    const normalizedDraft = normalizeCardDraft(draft);
+    const derivedDestinationRef = path.posix.join(path.posix.dirname(target.cardRef), normalizedDraft.filename);
+    const destinationRef = derivedDestinationRef.toLocaleLowerCase("en-US") === target.cardRef.toLocaleLowerCase("en-US")
+      ? target.cardRef
+      : derivedDestinationRef;
+    const destinationPath = await resolveContainedPath(configuration.vaultPath, destinationRef, {
+      fieldName: "draft.title",
+    });
+    let collision = false;
+    if (destinationRef.toLocaleLowerCase("en-US") !== target.cardRef.toLocaleLowerCase("en-US")) {
+      try {
+        await fs.lstat(destinationPath);
+        collision = true;
+      } catch (error: unknown) {
+        if (!isNodeError(error) || error.code !== "ENOENT") throw error;
+      }
+    }
+    return {
+      draft: normalizedDraft,
+      target: {
+        cardRef: target.cardRef,
+        ...(target.id ? { id: target.id } : {}),
+        title: target.title,
+        revision: target.revision,
+      },
+      destination: {
+        cardRef: destinationRef,
+        renamed: destinationRef !== target.cardRef,
+        collision,
+      },
+    };
+  }
+
   async writeCard(
     draft: CardDraft,
     options: { id?: string; createdAt?: string; atomicOperations?: AtomicCreateOperations } = {},
@@ -239,5 +323,71 @@ export class VaultCardEngine {
     );
     await this.scanCards();
     return { card, absolutePath: destinationPath };
+  }
+
+  async updateCard(
+    cardRef: string,
+    expectedRevision: string,
+    draft: CardDraft,
+    options: { atomicOperations?: AtomicReplaceOperations } = {},
+  ): Promise<SavedCard> {
+    const configuration = await this.configurationStore.requireConfiguration();
+    const inspection = await this.inspectCardUpdate(cardRef, expectedRevision, draft);
+    if (inspection.destination.collision) {
+      throw new PatchouliError("COLLISION", "The updated title would overwrite another card.", {
+        cardRef: inspection.destination.cardRef,
+      });
+    }
+    const targetPath = await resolveContainedPath(configuration.vaultPath, inspection.target.cardRef, {
+      fieldName: "cardRef",
+      mustExist: true,
+    });
+    const currentMarkdown = await fs.readFile(targetPath, "utf8");
+    const current = parseCard(currentMarkdown, inspection.target.cardRef);
+    if (current.revision !== expectedRevision) {
+      throw new PatchouliError(
+        "REVISION_CONFLICT",
+        "The card changed after preview. No update was written.",
+        { cardRef: current.cardRef, expectedRevision, actualRevision: current.revision },
+      );
+    }
+    const preservation = extractCardUpdatePreservation(currentMarkdown);
+    const rendered = renderCard(inspection.draft, {
+      id: current.id,
+      createdAt: current.createdAt,
+      updatedAt: new Date().toISOString(),
+      ...preservation,
+    });
+    const destinationPath = await resolveContainedPath(configuration.vaultPath, inspection.destination.cardRef, {
+      fieldName: "draft.title",
+    });
+
+    if (!inspection.destination.renamed) {
+      await atomicReplaceFile(targetPath, rendered.markdown, options.atomicOperations);
+    } else {
+      await atomicCreateFile(destinationPath, rendered.markdown);
+      try {
+        const latest = parseCard(await fs.readFile(targetPath, "utf8"), inspection.target.cardRef);
+        if (latest.revision !== expectedRevision) {
+          throw new PatchouliError(
+            "REVISION_CONFLICT",
+            "The card changed while its renamed update was being saved. No update was kept.",
+            { cardRef: latest.cardRef, expectedRevision, actualRevision: latest.revision },
+          );
+        }
+        await fs.unlink(targetPath);
+      } catch (error: unknown) {
+        await fs.unlink(destinationPath).catch(() => undefined);
+        throw error;
+      }
+    }
+
+    const card = parseCard(rendered.markdown, inspection.destination.cardRef);
+    await this.scanCards();
+    return {
+      card,
+      absolutePath: destinationPath,
+      ...(inspection.destination.renamed ? { previousCardRef: inspection.target.cardRef } : {}),
+    };
   }
 }

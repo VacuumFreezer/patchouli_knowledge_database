@@ -37,7 +37,7 @@ async function waitFor(check, message = "condition") {
   throw new Error(`Timed out waiting for ${message}`);
 }
 
-async function widget() {
+async function widget(previewPayload = preview()) {
   const messages = [];
   const dom = new JSDOM(html, {
     runScripts: "dangerously",
@@ -56,7 +56,7 @@ async function widget() {
     data: {
       jsonrpc: "2.0",
       method: "ui/notifications/tool-result",
-      params: { structuredContent: { ok: true, preview: preview() } },
+      params: { structuredContent: { ok: true, preview: previewPayload } },
     },
   }));
   await waitFor(() => window.document.querySelector("#title"), "review form");
@@ -165,6 +165,39 @@ test("Cancel is explicit, calls ui/message, and never calls save_card", async ()
     assert.match(message.params.content[0].text, /Do not save/u);
     assert.match(window.document.querySelector('[role="status"]').textContent, /Nothing was written/u);
     assert.equal(messages.some((item) => item.method === "tools/call"), false);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test("renders an update review and calls only update_card after confirmation", async () => {
+  const updatePreview = {
+    ...preview(),
+    operation: "update",
+    collision: undefined,
+    target: {
+      cardRef: "Patchouli/UI Review.md",
+      title: "UI Review",
+      revision: "a".repeat(64),
+    },
+    destination: {
+      cardRef: "Patchouli/UI Review.md",
+      renamed: false,
+      collision: false,
+    },
+  };
+  const { dom, window, messages } = await widget(updatePreview);
+  try {
+    assert.match(window.document.querySelector("h1").textContent, /Refine/u);
+    assert.match(window.document.querySelector('button[type="submit"]').textContent, /Update card/u);
+    window.document.querySelector('button[type="submit"]').click();
+    const call = await waitFor(
+      () => messages.find((message) => message.method === "tools/call"),
+      "update tool call",
+    );
+    assert.equal(call.params.name, "update_card");
+    assert.equal(call.params.arguments.pendingToken, "p".repeat(43));
+    assert.equal(messages.some((message) => message.params?.name === "save_card"), false);
   } finally {
     dom.window.close();
   }

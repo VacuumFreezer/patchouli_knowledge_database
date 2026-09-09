@@ -1,5 +1,5 @@
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { parseDocument, stringify } from "yaml";
 
 import { PatchouliError } from "./errors.js";
@@ -160,8 +160,14 @@ function renderSources(sources: SourceDraft[]): string {
 
 export function renderCard(
   draft: CardDraft,
-  options: { id?: string; createdAt?: string } = {},
-): { markdown: string; draft: NormalizedCardDraft; id: string; createdAt: string } {
+  options: {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    frontmatterExtras?: Record<string, unknown>;
+    customSectionsMarkdown?: string;
+  } = {},
+): { markdown: string; draft: NormalizedCardDraft; id: string; createdAt: string; updatedAt?: string } {
   const normalized = normalizeCardDraft(draft);
   const id = options.id ?? randomUUID();
   const createdAt = options.createdAt ?? new Date().toISOString();
@@ -170,14 +176,21 @@ export function renderCard(
       field: "createdAt",
     });
   }
+  if (options.updatedAt !== undefined && Number.isNaN(Date.parse(options.updatedAt))) {
+    throw new PatchouliError("VALIDATION_ERROR", "updatedAt must be an ISO-8601 timestamp.", {
+      field: "updatedAt",
+    });
+  }
 
   const sourceTypes = uniqueTrimmed(normalized.sources.map((source) => source.type), "sourceTypes");
   const frontmatter = stringify(
     {
+      ...(options.frontmatterExtras ?? {}),
       id,
       title: normalized.title,
       categories: normalized.categories,
       created_at: createdAt,
+      ...(options.updatedAt ? { updated_at: options.updatedAt } : {}),
       source_types: sourceTypes,
     },
     {
@@ -201,7 +214,7 @@ export function renderCard(
       return `- [[${safeWikiValue(filename)}|${safeWikiValue(connection.title)}]] — ${connection.reason}`;
     }).join("\n");
 
-  const markdown = [
+  const sections = [
     "---",
     frontmatter,
     "---",
@@ -228,9 +241,79 @@ export function renderCard(
     "",
     renderSources(normalized.sources),
     "",
-  ].join("\n");
+  ];
+  const customSections = options.customSectionsMarkdown?.trim();
+  if (customSections) sections.push(customSections, "");
+  const markdown = sections.join("\n");
 
-  return { markdown, draft: normalized, id, createdAt };
+  return {
+    markdown,
+    draft: normalized,
+    id,
+    createdAt,
+    ...(options.updatedAt ? { updatedAt: options.updatedAt } : {}),
+  };
+}
+
+const RESERVED_FRONTMATTER_KEYS = new Set([
+  "id",
+  "title",
+  "categories",
+  "created_at",
+  "updated_at",
+  "source_types",
+]);
+
+export function extractCardUpdatePreservation(markdown: string): {
+  frontmatterExtras: Record<string, unknown>;
+  customSectionsMarkdown: string;
+} {
+  const split = splitFrontmatter(markdown);
+  const frontmatterExtras: Record<string, unknown> = {};
+  if (split.frontmatter !== undefined) {
+    try {
+      const document = parseDocument(split.frontmatter, {
+        prettyErrors: false,
+        strict: false,
+        uniqueKeys: false,
+      });
+      const parsed = document.toJS({ maxAliasCount: 20 });
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+          if (!RESERVED_FRONTMATTER_KEYS.has(key)) frontmatterExtras[key] = value;
+        }
+      }
+    } catch {
+      // Malformed legacy frontmatter remains represented by the revision check; no unsafe keys are copied.
+    }
+  }
+
+  const canonical = new Set(["summary", "detail", "evidence", "connections", "sources"]);
+  const lines = split.body.split(/\r?\n/u);
+  const kept: string[] = [];
+  let collecting = false;
+  let fence: { marker: "`" | "~"; length: number } | undefined;
+  for (const line of lines) {
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/u)?.[1];
+    if (fenceMatch) {
+      const marker = fenceMatch[0] as "`" | "~";
+      if (fence?.marker === marker && fenceMatch.length >= fence.length) fence = undefined;
+      else if (!fence) fence = { marker, length: fenceMatch.length };
+    }
+    if (!fence) {
+      const heading = line.match(/^ {0,3}##[ \t]+(.+?)[ \t]*#*[ \t]*$/u)?.[1]?.trim().toLocaleLowerCase("en-US");
+      if (heading) collecting = !canonical.has(heading);
+    }
+    if (collecting) kept.push(line);
+  }
+  return {
+    frontmatterExtras,
+    customSectionsMarkdown: kept.join("\n").trim(),
+  };
+}
+
+export function cardRevision(markdown: string): string {
+  return createHash("sha256").update(markdown, "utf8").digest("hex");
 }
 
 function toStringArray(value: unknown): string[] {
@@ -331,12 +414,16 @@ export function parseCard(markdown: string, cardRef: string): ParsedCard {
   const createdAt = typeof metadata.created_at === "string" && metadata.created_at.trim()
     ? metadata.created_at.trim()
     : undefined;
+  const updatedAt = typeof metadata.updated_at === "string" && metadata.updated_at.trim()
+    ? metadata.updated_at.trim()
+    : undefined;
 
   return {
     ...(id ? { id } : {}),
     title,
     categories: toStringArray(metadata.categories),
     ...(createdAt ? { createdAt } : {}),
+    ...(updatedAt ? { updatedAt } : {}),
     sourceTypes: toStringArray(metadata.source_types),
     markdown,
     bodyMarkdown: split.body,
@@ -345,5 +432,6 @@ export function parseCard(markdown: string, cardRef: string): ParsedCard {
     cardRef: normalizedRef,
     filename,
     warnings,
+    revision: cardRevision(markdown),
   };
 }

@@ -58,6 +58,26 @@ export interface DraftInspection {
   collision: DraftCollision;
 }
 
+export interface CheckpointReference {
+  checkpointId: string;
+  revision: string;
+}
+
+export interface UpdateInspection {
+  draft: NormalizedCardDraft;
+  target: {
+    cardRef: string;
+    id?: string;
+    title: string;
+    revision: string;
+  };
+  destination: {
+    cardRef: string;
+    renamed: boolean;
+    collision: boolean;
+  };
+}
+
 export interface CardLink {
   cardRef: string;
   title?: string;
@@ -68,6 +88,7 @@ export interface ParsedCard {
   title: string;
   categories: string[];
   createdAt?: string;
+  updatedAt?: string;
   sourceTypes: string[];
   markdown: string;
   bodyMarkdown: string;
@@ -76,6 +97,7 @@ export interface ParsedCard {
   cardRef: string;
   filename: string;
   warnings: string[];
+  revision: string;
 }
 
 export interface SearchResult {
@@ -95,4 +117,28 @@ export interface SearchOptions {
 export interface SavedCard {
   card: ParsedCard;
   absolutePath: string;
+  previousCardRef?: string;
+}
+
+export interface CheckpointDraft {
+  launchId: string;
+  checkpointId: string;
+  revision: string;
+  sequence: number;
+  contextDigest: string;
+  createdAt: string;
+  updatedAt: string;
+  trigger: "auto" | "manual";
+  turnId: string;
+  model: string;
+  messageCount: number;
+  draft: NormalizedCardDraft;
+}
+
+export interface PatchouliSessionStatus {
+  active: boolean;
+  launchId?: string;
+  launchedAt?: string;
+  updatedAt?: string;
+  checkpointCount: number;
 }

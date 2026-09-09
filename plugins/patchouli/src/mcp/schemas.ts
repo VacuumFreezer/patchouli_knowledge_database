@@ -63,6 +63,7 @@ export const parsedCardSchema = z.object({
   title: z.string(),
   categories: z.array(z.string()),
   createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
   sourceTypes: z.array(z.string()),
   markdown: z.string(),
   bodyMarkdown: z.string(),
@@ -71,6 +72,35 @@ export const parsedCardSchema = z.object({
   cardRef: z.string(),
   filename: z.string(),
   warnings: z.array(z.string()),
+  revision: z.string(),
+});
+
+export const checkpointReferenceSchema = z.strictObject({
+  checkpointId: z.string().uuid(),
+  revision: z.string().regex(/^[a-f0-9]{64}$/u),
+});
+
+export const checkpointDraftSchema = z.object({
+  launchId: z.string().uuid(),
+  checkpointId: z.string().uuid(),
+  revision: z.string(),
+  sequence: z.number().int().nonnegative(),
+  contextDigest: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  trigger: z.enum(["auto", "manual"]),
+  turnId: z.string(),
+  model: z.string(),
+  messageCount: z.number().int().nonnegative(),
+  draft: normalizedCardDraftSchema,
+});
+
+export const patchouliSessionStatusSchema = z.object({
+  active: z.boolean(),
+  launchId: z.string().uuid().optional(),
+  launchedAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  checkpointCount: z.number().int().nonnegative(),
 });
 
 export const searchResultSchema = z.object({

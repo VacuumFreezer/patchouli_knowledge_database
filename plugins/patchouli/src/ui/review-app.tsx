@@ -35,8 +35,11 @@ interface ReviewDraft {
 }
 
 interface PreviewPayload {
+  operation?: "create" | "update";
   draft: ReviewDraft;
-  collision: { exists: boolean; cardRef: string };
+  collision?: { exists: boolean; cardRef: string };
+  target?: { cardRef: string; title: string; revision: string };
+  destination?: { cardRef: string; renamed: boolean; collision: boolean };
   pendingToken: string;
   expiresAt: string;
   confirmationRequired: true;
@@ -199,7 +202,7 @@ function ReviewApp(): React.JSX.Element {
     window.addEventListener("message", receive);
     request("ui/initialize", {
       protocolVersion: "2025-06-18",
-      appInfo: { name: "patchouli-card-review", version: "0.1.0" },
+      appInfo: { name: "patchouli-card-review", version: "0.2.0" },
       appCapabilities: {},
     }).then(() => {
       notify("ui/notifications/initialized", {});
@@ -213,6 +216,7 @@ function ReviewApp(): React.JSX.Element {
     () => draft?.connections.filter((connection) => connection.selected).length ?? 0,
     [draft],
   );
+  const isUpdate = preview?.operation === "update";
 
   if (!preview || !draft) {
     return (
@@ -235,10 +239,10 @@ function ReviewApp(): React.JSX.Element {
       return;
     }
     setStatus("saving");
-    setFeedback("Saving the confirmed card…");
+    setFeedback(isUpdate ? "Updating the confirmed card…" : "Saving the confirmed card…");
     try {
       const result = await request("tools/call", {
-        name: "save_card",
+        name: isUpdate ? "update_card" : "save_card",
         arguments: {
           pendingToken: preview.pendingToken,
           draft: toCardDraft(draft),
@@ -247,11 +251,11 @@ function ReviewApp(): React.JSX.Element {
       const output = result?.structuredContent;
       if (!output?.ok || output.error) {
         setStatus("reviewing");
-        setFeedback(output?.error?.message ?? "The card could not be saved.");
+        setFeedback(output?.error?.message ?? (isUpdate ? "The card could not be updated." : "The card could not be saved."));
         return;
       }
       setStatus("saved");
-      setFeedback(`Saved ${output.card?.title ?? draft.title}.`);
+      setFeedback(`${isUpdate ? "Updated" : "Saved"} ${output.card?.title ?? draft.title}.`);
     } catch {
       setStatus("reviewing");
       setFeedback("The host could not complete the save. You can retry while the preview token is valid.");
@@ -260,22 +264,23 @@ function ReviewApp(): React.JSX.Element {
 
   const cancel = () => {
     setStatus("cancelled");
-    setFeedback("Draft cancelled. Nothing was written to the vault.");
+    setFeedback(`${isUpdate ? "Update" : "Draft"} cancelled. Nothing was written to the vault.`);
     request("ui/message", {
       role: "user",
-      content: [{ type: "text", text: `Cancel the Patchouli draft “${draft.title}”. Do not save it.` }],
+      content: [{ type: "text", text: `Cancel the Patchouli ${isUpdate ? "update" : "draft"} “${draft.title}”. Do not ${isUpdate ? "update" : "save"} it.` }],
     }).catch(() => undefined);
   };
 
   return (
     <main className="shell">
       <header>
-        <p className="eyebrow">Patchouli · Review before saving</p>
-        <h1>Shape this knowledge card</h1>
-        <p className="lede">Nothing is written until you choose Save. The token expires {new Date(preview.expiresAt).toLocaleString()}.</p>
-        {preview.collision.exists ? (
+        <p className="eyebrow">Patchouli · Review before {isUpdate ? "updating" : "saving"}</p>
+        <h1>{isUpdate ? "Refine this knowledge card" : "Shape this knowledge card"}</h1>
+        <p className="lede">Nothing is written until you choose {isUpdate ? "Update" : "Save"}. The token expires {new Date(preview.expiresAt).toLocaleString()}.</p>
+        {isUpdate && preview.target ? <p className="hint">Updating {preview.target.cardRef} from the exact revision shown to Patchouli.</p> : null}
+        {(isUpdate ? preview.destination?.collision : preview.collision?.exists) ? (
           <p className="warning" role="alert">
-            {preview.collision.cardRef} already exists. Change the title before saving; Patchouli will safely recheck the final filename.
+            {(isUpdate ? preview.destination?.cardRef : preview.collision?.cardRef)} already exists. Change the title before {isUpdate ? "updating" : "saving"}; Patchouli will safely recheck the final filename.
           </p>
         ) : null}
       </header>
@@ -357,7 +362,7 @@ function ReviewApp(): React.JSX.Element {
 
         <div className="actions">
           <button type="button" className="secondary" onClick={cancel} disabled={status !== "reviewing"}>Cancel</button>
-          <button type="submit" className="primary" disabled={status !== "reviewing"}>{status === "saving" ? "Saving…" : "Save card"}</button>
+          <button type="submit" className="primary" disabled={status !== "reviewing"}>{status === "saving" ? (isUpdate ? "Updating…" : "Saving…") : (isUpdate ? "Update card" : "Save card")}</button>
         </div>
         <p className={status === "saved" ? "feedback success" : "feedback"} role="status" aria-live="polite">{feedback}</p>
       </form>

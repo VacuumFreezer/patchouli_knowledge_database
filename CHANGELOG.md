@@ -2,7 +2,59 @@
 
 Patchouli records each cohesive source, configuration, test, UI, or skill edit batch here. Entries use an ISO-8601 timestamp with the America/New_York UTC offset and briefly state motivation and changes. Bookkeeping-only updates to this file or `PROGRESS.md` do not require recursive entries.
 
+## 2026-09-09
+
+### 2026-09-09T02:01:38-04:00 — Label the second Hook Discard draft
+
+- **Motivation:** Apply the requested name to the second Hook without changing the confirmed draft-retention behavior.
+- **Changes:** Set the SessionEnd handler's supported statusMessage to `Discard draft` and refresh the plugin cachebuster for installation; the lifecycle event and retention logic remain unchanged.
+
+### 2026-09-09T01:49:10-04:00 — Package the retention fix
+
+- **Motivation:** Ensure the installed plugin uses the corrected session lifecycle.
+- **Changes:** Rebuilt the runtime bundles, refreshed the manifest cachebuster, and enabled deterministic lifecycle tests against the installed Hook bundle.
+
+### 2026-09-09T01:47:00-04:00 — Retain drafts across session termination
+
+- **Motivation:** Session end is not user confirmation of a successful card save; deleting its checkpoints could lose unsaved knowledge.
+- **Changes:** Replaced destructive session cleanup with capture deactivation, removed the session-delete API, documented same-task draft recovery, and added hook/restart/relaunch and MCP failed-save/selective-consumption regressions.
+
 ## 2026-09-08
+
+### 2026-09-08T16:52:30-04:00 — Exercise the real compaction hook safely
+
+- **Motivation:** Verify the production Codex synthesis path and ensure a failed hook can never echo source conversation content into its warning.
+- **Changes:** Added a temporary-state real hook smoke command, corrected strict structured-output handling for nullable source URLs, normalized generated URL values, made failure messages content-free while allowing compaction to continue, rejected stale out-of-order hook completions, documented the command, and added privacy/order regressions.
+
+### 2026-09-08T16:46:15-04:00 — Enforce the launch indicator
+
+- **Motivation:** An installed-plugin smoke task activated Patchouli correctly but paraphrased away the user-required visible launch icon.
+- **Changes:** Made the exact `# 🌿 Patchouli capture active` heading mandatory in the launch workflow, added a stable structured indicator to `launch_patchouli`, and covered both behaviors with protocol and skill regressions.
+
+### 2026-09-08T16:42:00-04:00 — Validate and package Stage 7
+
+- **Motivation:** Ship compaction-safe capture as an independently verifiable personal plugin update rather than relying on source-tree behavior.
+- **Changes:** Added hook/transcript/update/storage/UI regressions, expanded protocol and packaging checks to fifteen tools, bundled and verified the hook entry point, bumped Patchouli to `0.2.0`, applied the Stage 7 cachebuster, and made the smoke client able to test the installed runtime.
+
+### 2026-09-08T16:42:00-04:00 — Teach the Patchouli agent to launch and evolve cards
+
+- **Motivation:** Make activation non-trivial and ensure continued conversations refine matching knowledge while separating genuinely new topics.
+- **Changes:** Added explicit launch and card-update references, checkpoint-aware capture routing, existing-card retrieval and merge rules, exact confirmation/conflict behavior, selective draft consumption guidance, and updated skill discovery metadata.
+
+### 2026-09-08T16:42:00-04:00 — Connect pre-compaction capture to reviewed updates
+
+- **Motivation:** Preserve detailed learning before context compaction without creating unreviewed vault content, then safely use it in later final capture.
+- **Changes:** Added bundled `PreCompact` and `SessionEnd` hooks, read-only ephemeral Codex draft synthesis, structured bounded checkpoint output, task lifecycle MCP tools, operation-bound review tokens, update preview/save tools, and an update-aware inline review app.
+
+### 2026-09-08T16:04:45-04:00 — Add task checkpoints and safe card updates
+
+- **Motivation:** Give launched Patchouli tasks a durable bridge across compaction and let reviewed knowledge evolve without overwriting concurrent or user-authored changes.
+- **Changes:** Added a task-isolated transient checkpoint store, defensive Codex transcript parsing, stable card revisions, optimistic update inspection, atomic update/rename writes, and preservation of card identity, timestamps, custom frontmatter, and custom sections.
+
+### 2026-09-08T15:51:32-04:00 — Define compaction-safe updates
+
+- **Motivation:** Preserve technical learning across Codex context compaction and allow a continued conversation to refine existing cards without weakening review or vault safety.
+- **Changes:** Documented explicit `$patchouli launch` activation, the trusted `PreCompact` checkpoint lifecycle, transient task-isolated drafts, reviewed optimistic card updates, selective draft consumption, new MCP contracts, Hook trust requirements, and Stage 7 validation scope.
 
 ### 2026-09-08T13:22:16-04:00 — Document personal installation and Windows constraints
 

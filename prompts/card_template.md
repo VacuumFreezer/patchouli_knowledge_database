@@ -9,6 +9,7 @@ title: "<title>"
 categories:
   - "<category>"
 created_at: "<ISO-8601 timestamp>"
+updated_at: "<ISO-8601 timestamp; present after an update>"
 source_types:
   - "<chat|text|markdown>"
 ---
@@ -39,6 +40,7 @@ source_types:
 ## Card creation rules
 
 - Generate a UUID for every new card and preserve the human title separately from the sanitized filename.
+- On update, preserve the existing UUID and `created_at` value and set `updated_at` to the confirmed write time.
 - Serialize frontmatter safely; model- or user-supplied Markdown cannot add or replace frontmatter.
 - Trim extra spaces from categories and remove exact duplicates without renaming the user's categories.
 - Use an ISO-8601 creation timestamp with an explicit UTC offset.
@@ -47,6 +49,8 @@ source_types:
 - Preserve mathematical meaning with Obsidian-compatible Markdown/LaTeX: `$...$` for inline formulas and `$$...$$` for display formulas.
 - Reserve level-one and level-two headings for the server-owned card structure; Summary and Detail may use `###` or lower subheadings.
 - Include only concise, paraphrased evidence. Never copy the full chat transcript or reproduce long dialogue passages in Detail.
-- Render only user-selected connections. Existing cards are not edited because Obsidian derives backlinks.
+- Render only user-selected connections. Updating a card never edits other cards because Obsidian derives backlinks.
 - Keep empty optional Evidence, Connections, and Sources sections with `_None._` so the card structure remains predictable. Summary and Detail are required.
-- Reject a destination collision; never overwrite or create an automatically suffixed filename.
+- Reject a new-card destination collision; never create an automatically suffixed filename.
+- Update only through a reviewed token bound to the existing card UUID and content revision. Reject stale revisions and title-derived rename collisions.
+- Preserve unrelated frontmatter keys and custom level-two sections when updating a canonical card.

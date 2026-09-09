@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "auto|manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/dist/hook.mjs\" precompact",
+            "commandWindows": "cmd.exe /d /s /c call \"%PLUGIN_ROOT%\\scripts\\launch-patchouli-hook.cmd\" \"%PLUGIN_ROOT%\\dist\\hook.mjs\" precompact",
+            "timeout": 240,
+            "statusMessage": "🌿 Preserving Patchouli details before compaction…"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/dist/hook.mjs\" session-end",
+            "commandWindows": "cmd.exe /d /s /c call \"%PLUGIN_ROOT%\\scripts\\launch-patchouli-hook.cmd\" \"%PLUGIN_ROOT%\\dist\\hook.mjs\" session-end",
+            "timeout": 3,
+            "statusMessage": "Discard draft"
+          }
+        ]
+      }
+    ]
+  }
+}

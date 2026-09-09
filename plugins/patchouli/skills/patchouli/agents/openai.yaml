@@ -1,13 +1,13 @@
 interface:
   display_name: "Patchouli"
-  short_description: "Capture and query reviewed Obsidian knowledge"
-  default_prompt: "Use $patchouli to save what I learned from this conversation as a reviewed knowledge card."
+  short_description: "Capture, evolve, and query Obsidian knowledge"
+  default_prompt: "Use $patchouli to capture or update what I learned as a reviewed knowledge card."
 
 dependencies:
   tools:
     - type: "mcp"
       value: "patchouli"
-      description: "Local Patchouli vault, card review, and search tools"
+      description: "Local Patchouli launch, checkpoint, vault, review, update, and search tools"
 
 policy:
   allow_implicit_invocation: true

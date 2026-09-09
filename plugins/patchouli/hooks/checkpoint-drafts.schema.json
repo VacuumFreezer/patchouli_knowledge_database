@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["drafts"],
+  "properties": {
+    "drafts": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "categories", "summaryMarkdown", "detailMarkdown", "evidence", "sources", "connections"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "categories": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 2000 } },
+          "summaryMarkdown": { "type": "string", "minLength": 1, "maxLength": 50000 },
+          "detailMarkdown": { "type": "string", "minLength": 1, "maxLength": 50000 },
+          "evidence": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["claim", "sourceReference"],
+              "properties": {
+                "claim": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "sourceReference": { "type": "string", "minLength": 1, "maxLength": 2000 }
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "label", "url"],
+              "properties": {
+                "type": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "label": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "url": {
+                  "anyOf": [
+                    { "type": "string", "maxLength": 4096 },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            }
+          },
+          "connections": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cardRef", "title", "reason", "selected"],
+              "properties": {
+                "cardRef": { "type": "string", "minLength": 1, "maxLength": 1024 },
+                "title": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "selected": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
