@@ -28,6 +28,7 @@ export const cardDraftSchema = z.strictObject({
   categories: z.array(requiredInlineText).max(32),
   summaryMarkdown: requiredMarkdown,
   detailMarkdown: requiredMarkdown,
+  fyiMarkdown: markdown.optional(),
   evidence: z.array(evidenceDraftSchema).max(100),
   sources: z.array(sourceDraftSchema).max(100),
   connections: z.array(connectionDraftSchema).max(100),
@@ -78,6 +79,29 @@ export const parsedCardSchema = z.object({
 export const checkpointReferenceSchema = z.strictObject({
   checkpointId: z.string().uuid(),
   revision: z.string().regex(/^[a-f0-9]{64}$/u),
+});
+
+export const captureMemberSchema = z.strictObject({
+  key: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/u),
+  splitReason: requiredInlineText,
+  selected: z.boolean().optional(),
+  draft: cardDraftSchema,
+  cardRef: z.string().min(1).max(1_024).optional(),
+  expectedRevision: z.string().regex(/^[a-f0-9]{64}$/u).optional(),
+  checkpointRefs: z.array(checkpointReferenceSchema).max(8).optional(),
+});
+export const captureRelationshipSchema = z.strictObject({
+  fromKey: z.string().min(1).max(64), toKey: z.string().min(1).max(64),
+  reason: requiredInlineText, selected: z.boolean(),
+});
+export const captureInputShape = {
+  cards: z.array(captureMemberSchema).min(1).max(8),
+  relationships: z.array(captureRelationshipSchema).max(56),
+};
+export const capturePreviewSchema = z.object({
+  cards: z.array(captureMemberSchema.extend({ selected: z.boolean(), draft: normalizedCardDraftSchema, resolvedDraft: normalizedCardDraftSchema, destinationRef: z.string() })),
+  relationships: z.array(captureRelationshipSchema),
+  pendingToken: z.string(), expiresAt: z.string(), confirmationRequired: z.literal(true),
 });
 
 export const checkpointDraftSchema = z.object({

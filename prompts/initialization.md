@@ -2,7 +2,7 @@
 
 ## Overview
 
-This app is a self-learning tool. It condenses the knowledge from every session into an interactive knowledge database. Typically, the user will provide some content, for example a paper, blog, or concept. After interacting with an AI chatbot and understanding the knowledge, the user will call Patchouli to condense the knowledge covered in the session into the database, with user-defined categories and an editable agent-written Summary. A more concrete, paraphrased Detail section expands the Summary and supports Markdown/LaTeX formulas. The knowledge is stored as a Markdown file called a card. When connections exist between cards, Obsidian wikilinks are created.
+This app is a self-learning tool. It condenses the knowledge from every session into an interactive knowledge database. Typically, the user will provide some content, for example a paper, blog, or concept. After interacting with an AI chatbot and understanding the knowledge, the user will call Patchouli to condense the knowledge covered in the session into the database, with user-defined categories and an editable agent-written Summary. A more concrete, paraphrased Core section expands the Summary; an optional FYI section holds examples and version-specific figures and supports Markdown/LaTeX formulas. The knowledge is stored as a Markdown file called a card. When connections exist between cards, Obsidian wikilinks are created.
 
 ## Scope
 
@@ -27,7 +27,7 @@ Use Obsidian engine to manage knowledge cards and generate external links. The c
 For these skills, try to search the website whether there are built-in skills, or we should develop ourselves.
 
 1. read the input and pickout the critical concepts
-2. condense the dialogue into a concise Summary plus a substantially more concrete, paraphrased Detail section
+2. condense the dialogue into a concise Summary plus a substantially more concrete, paraphrased Core and optional FYI
 3. how to judge whether two cards should have connections
 4. quick inquiries in the database
 
@@ -38,3 +38,5 @@ A brief UI. When the user decides to submit one understood concept to the databa
 ## Path
 The app source files should be in D:\Codex\workspaces\patchouli_knowledge_database.
 The database can be built anywhere.
+
+For v2, first inventory independently reusable concepts, including domain shifts, general prerequisites and developed foundations. Review the useful set together with justified links between unsaved peers, then support one explicit save-all confirmation. A passing name or incidental example does not require a separate card.

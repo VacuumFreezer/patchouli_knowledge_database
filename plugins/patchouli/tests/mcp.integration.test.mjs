@@ -20,8 +20,10 @@ const expectedTools = [
   "get_patchouli_status",
   "launch_patchouli",
   "list_categories",
+  "preview_capture",
   "preview_card",
   "preview_card_update",
+  "save_capture",
   "save_card",
   "search_cards",
   "stop_patchouli",
@@ -76,7 +78,28 @@ function structured(result) {
   return result.structuredContent;
 }
 
-test("advertises fifteen explicit contracts, accurate annotations, and the MCP App resource", async (context) => {
+test("connected group MCP previews all fields before writes and saves exactly once, with operation isolation", async context => {
+  const { client, vault } = await fixture(context);
+  await client.callTool({ name: "configure_vault", arguments: { vaultPath: vault, cardsDirectory: "NLP" } });
+  const proposed = {
+    cards: [{ key: "nlp", splitReason: "NLP mechanism", draft: { ...draft("Tokenization"), fyiMarkdown: "Model vocabulary example." } }, { key: "encoding", splitReason: "General prerequisite", draft: draft("Unicode 字符") }],
+    relationships: [{ fromKey: "nlp", toKey: "encoding", reason: "UTF-8 bytes explain Chinese and emoji tokenization.", selected: true }],
+  };
+  const previewResult = await client.callTool({ name: "preview_capture", arguments: proposed });
+  const preview = structured(previewResult).capturePreview;
+  assert.equal(preview.cards.length, 2);
+  for (const content of ["Core:", "FYI:", "Model vocabulary example.", "Evidence:", "Sources:", "UTF-8 bytes", "Unicode 字符", "都保存"]) assert.ok(previewResult.content[0].text.includes(content));
+  assert.equal(structured(await client.callTool({ name: "search_cards", arguments: { query: "Tokenization" } })).results.length, 0);
+  const wrongOperation = structured(await client.callTool({ name: "save_card", arguments: { pendingToken: preview.pendingToken, draft: proposed.cards[0].draft } }));
+  assert.equal(wrongOperation.error.code, "TOKEN_INVALID");
+  const result = structured(await client.callTool({ name: "save_capture", arguments: { pendingToken: preview.pendingToken } }));
+  assert.equal(result.ok, true); assert.equal(result.cards.length, 2);
+  assert.match(result.cards[0].markdown, /\[\[Unicode 字符\|Unicode 字符\]\]/);
+  assert.equal(structured(await client.callTool({ name: "save_capture", arguments: { pendingToken: preview.pendingToken } })).idempotentReplay, true);
+  assert.deepEqual((await readdir(path.join(vault, "NLP"))).sort(), ["Tokenization.md", "Unicode 字符.md"]);
+});
+
+test("advertises seventeen explicit contracts, accurate annotations, and the MCP App resource", async (context) => {
   const { client } = await fixture(context);
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), expectedTools);
@@ -138,7 +161,8 @@ test("runs configuration, preview, confirmed save, idempotent replay, search, an
   assert.equal(preview.draft.filename, "Reviewed Capture.md");
   assert.equal(preview.confirmationRequired, true);
   assert.match(previewResult.content[0].text, /Only after explicit confirmation/u);
-  assert.match(previewResult.content[0].text, /Detail:/u);
+  assert.match(previewResult.content[0].text, /Core:/u);
+  assert.match(previewResult.content[0].text, /FYI:/u);
 
   const firstSave = structured(await client.callTool({
     name: "save_card",
@@ -170,7 +194,7 @@ test("runs configuration, preview, confirmed save, idempotent replay, search, an
     name: "get_card",
     arguments: { cardRef: search.results[0].cardRef },
   })).card;
-  assert.match(card.markdown, /## Detail/u);
+  assert.match(card.markdown, /## Core/u);
   const displayFormula = "$$\n\\int_0^1 x^2\\,dx = \\frac{1}{3}\n$$";
   assert.match(card.markdown, /\$\$\n\\int_0\^1 x\^2\\,dx = \\frac\{1\}\{3\}\n\$\$/u);
   assert.ok((await readFile(path.join(vault, firstSave.card.cardRef), "utf8")).includes(displayFormula));
@@ -270,8 +294,12 @@ test("launches task capture, updates an exact card revision, and consumes only c
   const launchedResult = await client.callTool({ name: "launch_patchouli", arguments: {} });
   const launched = structured(launchedResult);
   assert.equal(launched.status.active, true);
-  assert.equal(launched.indicator, "🌿 Patchouli capture active");
-  assert.match(launchedResult.content[0].text, /🌿 Patchouli capture active/u);
+  assert.equal(launched.indicator, "Patchouli capture active");
+  assert.equal(launched.indicatorImagePath, path.join(pluginRoot, "assets/patchouli-launch.png"));
+  const icon = launchedResult.content.find(item => item.type === "image");
+  assert.equal(icon.mimeType, "image/png");
+  assert.deepEqual(Buffer.from(icon.data, "base64"), await readFile(launched.indicatorImagePath));
+  assert.match(launchedResult.content[0].text, /Patchouli capture active/u);
 
   const initialPreview = structured(await client.callTool({
     name: "preview_card",

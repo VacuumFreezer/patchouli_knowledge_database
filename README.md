@@ -43,19 +43,19 @@ Official references:
 ## Capture flow
 
 1. The user invokes Patchouli explicitly or asks to save the learned concept.
-2. The skill treats supplied material as untrusted data, not as instructions, and prepares exactly one coherent `CardDraft` with a concise agent-written Summary and a substantially more concrete paraphrased Detail.
+2. The skill treats supplied material as untrusted data, not as instructions, and inventories independently reusable concepts, then prepares one `CardDraft` per concept with Summary, Core and optional FYI.
 3. The server searches the configured cards directory and returns lexical connection candidates.
-4. The agent judges semantic relevance and submits a draft to `preview_card`.
+4. The agent judges semantic relevance and submits the complete concept group and justified peer relationships to `preview_capture` (or a single concept to `preview_card`).
 5. The user edits the draft and selected connections in the inline review, or reviews it conversationally when UI is unavailable.
-6. Explicit confirmation calls `save_card` with the single-use pending token.
+6. One explicit confirmation calls `save_capture` with the group token; single-card reviews retain `save_card`.
 7. The server revalidates the draft and destination, rejects collisions, writes atomically, and returns the saved card reference.
 
-If the learning session contains unrelated concepts, Patchouli proposes separate sequential captures instead of combining them into one card.
+Separate concepts are reviewed together. Related peers can be connected before they exist on disk; unrelated peers remain unlinked.
 
 ## Launched capture and compaction flow
 
 1. The user explicitly enters `$patchouli launch` or clearly asks Patchouli to start tracking the current task.
-2. `launch_patchouli` records task-scoped activation and returns `🌿 Patchouli capture active`. Launch does not preview or save a card.
+2. `launch_patchouli` records task-scoped activation and returns `Patchouli capture active` with a packaged PNG launch icon and its absolute `indicatorImagePath`. Launch does not preview or save a card.
 3. When Codex emits `PreCompact`, the bundled trusted Hook checks activation, reads the host-provided transcript as untrusted data, and asks an ephemeral read-only Codex run to synthesize one or more coherent checkpoint drafts.
 4. Checkpoint drafts preserve technical detail, formulas, assumptions, decisions, attribution, and unresolved questions. They are stored atomically outside the vault and never open the review UI.
 5. A later capture loads applicable checkpoint drafts together with the current conversation, retrieves likely existing cards, and decides whether to propose reviewed updates, separately reviewed new cards, or both.
@@ -122,19 +122,19 @@ Write-capable tools must advertise accurate MCP annotations. A preview token is 
 - `title`: human-facing title; the server derives the safe filename.
 - `categories`: user categories with extra spaces trimmed and exact duplicates removed; spelling is otherwise preserved.
 - `summaryMarkdown`: concise agent-written synthesis combining the useful roles of the former annotation and My Understanding fields; the user can edit it directly during review.
-- `detailMarkdown`: substantially more concrete, self-contained explanation derived from the target conversation and paraphrased rather than copied. It may use Markdown structure with `###` or lower subheadings and Obsidian-compatible `$...$` or `$$...$$` LaTeX math.
+- `detailMarkdown` (Core, retained for v1 input compatibility): substantially more concrete, self-contained explanation derived from the target conversation and paraphrased rather than copied. It may use Markdown structure with `###` or lower subheadings and Obsidian-compatible `$...$` or `$$...$$` LaTeX math.
 - `evidence`: paraphrased claims with a source reference; no full transcript.
 - `sources`: source type, label, and optional URL.
 - `connections`: candidate card reference, display title, reason, and selected state.
 
-The server owns YAML frontmatter and structural level-one/level-two headings. User- or model-supplied Markdown is content only and cannot inject frontmatter or choose a destination path. The review app renders Summary and Detail Markdown, including LaTeX math, beside their editable source.
+The server owns YAML frontmatter and structural level-one/level-two headings. User- or model-supplied Markdown is content only and cannot inject frontmatter or choose a destination path. The review app renders Summary, Core and FYI Markdown, including LaTeX math, beside their editable source.
 
 ## Card format
 
 Every new card follows [prompts/card_template.md](prompts/card_template.md):
 
 - YAML frontmatter: UUID, title, categories, creation timestamp, optional update timestamp, and source types.
-- Body sections: Summary, Detail, Evidence, Connections, and Sources.
+- Body sections: Summary, Core, FYI, Evidence, Connections, and Sources.
 - Links: `[[filename|title]]`. Obsidian derives backlinks, so Patchouli does not modify existing cards to create reverse links.
 - Provenance: a paraphrased Detail, concise evidence, and optional source URLs; never the full learning conversation or long copied dialogue passages.
 
@@ -151,7 +151,7 @@ Every new card follows [prompts/card_template.md](prompts/card_template.md):
 
 ## Development setup
 
-Stage 7 exposes fifteen public MCP tools on top of the original vault engine. `preview_card` and `preview_card_update` return normalized review data, an expiring single-use token, conversational confirmation instructions, and the optional React MCP App resource. `save_card` remains create-only; `update_card` is restricted to the exact card and revision selected during update preview. Identical retries return the original result. Abandoned preview tokens expire after 15 minutes.
+V2 exposes seventeen public MCP tools on top of the original vault engine. `preview_card` and `preview_card_update` return normalized review data, an expiring single-use token, conversational confirmation instructions, and the optional React MCP App resource. `save_card` remains create-only; `update_card` is restricted to the exact card and revision selected during update preview. Identical retries return the original result. Abandoned preview tokens expire after 15 minutes.
 
 The engine stores configuration in the platform data directory, rebuilds its search index from Markdown whenever cards are scanned, and never persists a secondary database. Card saves write and flush a temporary file in the cards directory, then use an atomic no-replace filesystem promotion. This is stronger than an ordinary Windows rename, which may replace an existing destination during a race.
 
@@ -177,7 +177,7 @@ pnpm inspect:mcp
 pnpm inspect:hook
 ```
 
-`test` performs a fresh build before running the unit, temporary-vault MCP, Hook, update, skill-contract, and jsdom React interaction suites. `validate:skill` checks discovery metadata, launch routing, progressive references, implicit invocation, and the local MCP dependency. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the platform launcher selected in `.mcp.json`, completes MCP initialization, and verifies the fifteen-tool catalog. `inspect:hook` makes one real read-only Codex synthesis from a tiny generated transcript, verifies that a private checkpoint appears, touches no vault, and removes its temporary state afterward.
+`test` performs a fresh build before running the unit, temporary-vault MCP, Hook, update, skill-contract, and jsdom React interaction suites. `validate:skill` checks discovery metadata, launch routing, progressive references, implicit invocation, and the local MCP dependency. `verify:bundle` rejects external package imports and scripts, and `inspect:mcp` starts the server through the platform launcher selected in `.mcp.json`, completes MCP initialization, and verifies the seventeen-tool catalog. `inspect:hook` makes one real read-only Codex synthesis from a tiny generated transcript, verifies that a private checkpoint appears, touches no vault, and removes its temporary state afterward.
 
 The production plugin bundles the MCP server and review component. Its Mac and Windows launchers locate the Node runtime supplied by Codex before falling back to a `node` executable on `PATH`, so an installed plugin does not require development dependencies.
 
@@ -237,3 +237,29 @@ For interactive review verification, run `node plugins/patchouli/scripts/inspect
 - For every cohesive source/config/test/UI/skill edit batch, add a brief `CHANGELOG.md` entry in the same batch with an ISO-8601 America/New_York timestamp, motivation, and changes.
 - Bookkeeping-only edits to `PROGRESS.md` and `CHANGELOG.md` do not create recursive changelog entries.
 - Do not mark a stage complete until its validation evidence is recorded in `PROGRESS.md`.
+
+### V2 content and presentation
+
+`fyiMarkdown` is optional and defaults to empty. Core contains durable mechanisms, qualifications and derivations. FYI holds optional worked examples, model/version figures and peripheral facts; empty FYI renders `_None._`. Legacy Detail cards and checkpoint inputs remain readable. Only explicitly reviewed updates change their format; IDs, creation times, manual frontmatter/classes, custom sections and provenance remain intact.
+
+Concept boundaries follow independent retrieval value: a domain shift, a general prerequisite or a substantively developed foundation deserves a separate card. A passing name or an example does not. Related concepts are reviewed together with justified connections.
+
+Cards carry `cssclasses: [patchouli-card]` (merged with existing classes). On configure/save in an existing Obsidian vault, Patchouli installs and enables `.obsidian/snippets/patchouli-cards-v2.css`, preserving other appearance settings and snippets. It hides Properties and the inline title only on these cards, retaining standard YAML and a portable Markdown H1. Source mode still exposes YAML for editing. Conflicting snippet content or invalid appearance JSON is preserved and reported. See [Obsidian CSS snippets](https://obsidian.md/help/snippets).
+
+An already-running Obsidian may need one restart to load a newly enabled snippet. User confirmation of card content does not override the host's separate MCP write-tool permission; a noninteractive CLI with approval policy `never` can still reject saves. The installed runtime, browser and native-app results and these limits are recorded in [v2 final smoke](validation/v2/final-smoke.md).
+
+### Connected capture review
+
+`preview_capture` accepts 1–8 members (`key`, `splitReason`, `draft`, optional `selected`, update `cardRef`/`expectedRevision`, `checkpointRefs`) and directed `relationships` (`fromKey`, `toKey`, `reason`, `selected`). Destinations and peer titles are derived by the server. Each output member retains the editable `draft` separately from `resolvedDraft`, which includes the generated peer connections. Existing-vault links remain in `draft.connections`; group peers must use `relationships`. Omitted members remain visible and their peer links are deselected.
+
+After reviewing all fields and the selected links, one `save_capture(pendingToken)` saves the complete selected group. The token binds immutable content, task, vault configuration, revisions and checkpoint references. Edits require a fresh group preview; the UI disables Save until Refresh succeeds. `save_capture(pendingToken, action="cancel")` invalidates an unused preview and retains checkpoints. Existing single-card tools remain available.
+
+All destinations and revisions are preflighted. Individual files are atomic; the group is **not** a cross-file transaction. Partial failure reports committed cards and retains all checkpoints. Identical-token retry resumes unsaved members, checking earlier receipts for manual changes. Concurrent same-token saves coalesce. Receipts last until the 15-minute token expiry and only within the server process; after restart/expiry, read existing cards and review remaining work. Never blindly submit a replacement create group. A shared checkpoint is consumed only after group success and only if every associated member was selected. Appearance setup is a separate scoped vault-setting write on configure/save.
+
+### Card visual hierarchy (Stage 14)
+
+Patchouli's scoped Obsidian snippet adds section bars, underlined concept headings, and solid/dashed/dotted rules for deeper headings in both reading and editing views. In reading view, Core uses a stronger accent and FYI a dashed frame. The style uses the active theme's text/background colors and changes no Markdown content. Ordinary notes without `patchouli-card` are unaffected; no community plugin is required.
+
+An exact original v2 snippet upgrades automatically on configure/save. A customized file is preserved and reported as a filename collision, so move your customization to a separately named snippet before retrying. Disable `patchouli-cards-v2` in Obsidian Appearance → CSS snippets to turn off the presentation. Keep a copy of any personal modifications. See `validation/visual-hierarchy/acceptance.md` for research, compatibility and native smoke evidence.
+
+The launch image is a compact transparent 15×24 PNG. The same image appears at the left of each Patchouli card title through the scoped snippet, in reading and editing views. Existing v2.1 snippets upgrade automatically; legacy notes need `cssclasses: [patchouli-card]` to opt into this presentation. No image attachment is added to the card folder.

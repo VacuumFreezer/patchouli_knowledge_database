@@ -1,0 +1,62 @@
+{
+  "plugin": "/Users/tongshen/.codex/plugins/cache/personal/patchouli/2.0.0+codex.20260910020002",
+  "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/stage14-20260909",
+  "checks": [
+    "installed configure upgrades old snippet",
+    "group preview/save/read",
+    "idempotent save replay",
+    "NLP search/read",
+    "default configuration unchanged",
+    "installed snippet exact"
+  ],
+  "saved": {
+    "ok": true,
+    "cards": [
+      {
+        "id": "b259c131-1515-4618-84fc-ed5c65f76076",
+        "title": "Stage14 Visual Smoke",
+        "categories": [
+          "Smoke"
+        ],
+        "createdAt": "2026-09-10T02:02:01.320Z",
+        "sourceTypes": [
+          "text"
+        ],
+        "markdown": "---\n\"cssclasses\":\n  - \"patchouli-card\"\n\"id\": \"b259c131-1515-4618-84fc-ed5c65f76076\"\n\"title\": \"Stage14 Visual Smoke\"\n\"categories\":\n  - \"Smoke\"\n\"created_at\": \"2026-09-10T02:02:01.320Z\"\n\"source_types\":\n  - \"text\"\n---\n\n# Stage14 Visual Smoke\n\n## Summary\n\n临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。\n\n## Core\n\n### 三级：字符与字节\n\n中文和 emoji 😀 在 UTF-8 中占用不同数量的字节。\n\n#### 四级：编码机制\n\n字符编码将码点转换为字节序列。\n\n##### 五级：边界条件\n\n组合 emoji 可能包含多个码点。\n\n###### 六级：补充细节\n\n👩‍💻 是一个可见字素。行内公式 $n = 3$。\n\n$$\n\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}\n$$\n\n## FYI\n\n### 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容\n\n| 字符 | UTF-8 字节 |\n| --- | --- |\n| A | 1 |\n| 中 | 3 |\n| 😀 | 4 |\n\n```python\nprint(len(\"😀\".encode(\"utf-8\")))\n```\n\n- 列表依然可读。\n- 示例仅供样式验收。\n\n## Evidence\n\n_None._\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: Stage 14 synthetic visual fixture\n",
+        "bodyMarkdown": "# Stage14 Visual Smoke\n\n## Summary\n\n临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。\n\n## Core\n\n### 三级：字符与字节\n\n中文和 emoji 😀 在 UTF-8 中占用不同数量的字节。\n\n#### 四级：编码机制\n\n字符编码将码点转换为字节序列。\n\n##### 五级：边界条件\n\n组合 emoji 可能包含多个码点。\n\n###### 六级：补充细节\n\n👩‍💻 是一个可见字素。行内公式 $n = 3$。\n\n$$\n\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}\n$$\n\n## FYI\n\n### 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容\n\n| 字符 | UTF-8 字节 |\n| --- | --- |\n| A | 1 |\n| 中 | 3 |\n| 😀 | 4 |\n\n```python\nprint(len(\"😀\".encode(\"utf-8\")))\n```\n\n- 列表依然可读。\n- 示例仅供样式验收。\n\n## Evidence\n\n_None._\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: Stage 14 synthetic visual fixture\n",
+        "bodyText": "Stage14 Visual Smoke Summary 临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。 Core 三级：字符与字节 中文和 emoji 😀 在 UTF 8 中占用不同数量的字节。 四级：编码机制 字符编码将码点转换为字节序列。 五级：边界条件 组合 emoji 可能包含多个码点。 六级：补充细节 👩‍💻 是一个可见字素。行内公式 $n = 3$。 $$ \\sum {k=1}^{n} k = \\frac{n(n+1)}{2} $$ FYI 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容 | 字符 | UTF 8 字节 | | | | | A | 1 | | 中 | 3 | | 😀 | 4 | 列表依然可读。 示例仅供样式验收。 Evidence None. Connections None. Sources text: Stage 14 synthetic visual fixture",
+        "links": [],
+        "cardRef": "Engineering/Stage14 Visual Smoke.md",
+        "filename": "Stage14 Visual Smoke.md",
+        "warnings": [],
+        "revision": "bd958e8ff15cb7ed1891309c814190f8de07b4f8628b12e58a277b6f928a6ccc"
+      }
+    ],
+    "cancelled": false,
+    "retainedCheckpointRefs": [],
+    "warnings": [],
+    "idempotentReplay": false
+  },
+  "read": {
+    "ok": true,
+    "card": {
+      "id": "b259c131-1515-4618-84fc-ed5c65f76076",
+      "title": "Stage14 Visual Smoke",
+      "categories": [
+        "Smoke"
+      ],
+      "createdAt": "2026-09-10T02:02:01.320Z",
+      "sourceTypes": [
+        "text"
+      ],
+      "markdown": "---\n\"cssclasses\":\n  - \"patchouli-card\"\n\"id\": \"b259c131-1515-4618-84fc-ed5c65f76076\"\n\"title\": \"Stage14 Visual Smoke\"\n\"categories\":\n  - \"Smoke\"\n\"created_at\": \"2026-09-10T02:02:01.320Z\"\n\"source_types\":\n  - \"text\"\n---\n\n# Stage14 Visual Smoke\n\n## Summary\n\n临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。\n\n## Core\n\n### 三级：字符与字节\n\n中文和 emoji 😀 在 UTF-8 中占用不同数量的字节。\n\n#### 四级：编码机制\n\n字符编码将码点转换为字节序列。\n\n##### 五级：边界条件\n\n组合 emoji 可能包含多个码点。\n\n###### 六级：补充细节\n\n👩‍💻 是一个可见字素。行内公式 $n = 3$。\n\n$$\n\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}\n$$\n\n## FYI\n\n### 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容\n\n| 字符 | UTF-8 字节 |\n| --- | --- |\n| A | 1 |\n| 中 | 3 |\n| 😀 | 4 |\n\n```python\nprint(len(\"😀\".encode(\"utf-8\")))\n```\n\n- 列表依然可读。\n- 示例仅供样式验收。\n\n## Evidence\n\n_None._\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: Stage 14 synthetic visual fixture\n",
+      "bodyMarkdown": "# Stage14 Visual Smoke\n\n## Summary\n\n临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。\n\n## Core\n\n### 三级：字符与字节\n\n中文和 emoji 😀 在 UTF-8 中占用不同数量的字节。\n\n#### 四级：编码机制\n\n字符编码将码点转换为字节序列。\n\n##### 五级：边界条件\n\n组合 emoji 可能包含多个码点。\n\n###### 六级：补充细节\n\n👩‍💻 是一个可见字素。行内公式 $n = 3$。\n\n$$\n\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}\n$$\n\n## FYI\n\n### 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容\n\n| 字符 | UTF-8 字节 |\n| --- | --- |\n| A | 1 |\n| 中 | 3 |\n| 😀 | 4 |\n\n```python\nprint(len(\"😀\".encode(\"utf-8\")))\n```\n\n- 列表依然可读。\n- 示例仅供样式验收。\n\n## Evidence\n\n_None._\n\n## Connections\n\n_None._\n\n## Sources\n\n- text: Stage 14 synthetic visual fixture\n",
+      "bodyText": "Stage14 Visual Smoke Summary 临时视觉验收卡：检查分区、子标题和窄栏；测试后归档。 Core 三级：字符与字节 中文和 emoji 😀 在 UTF 8 中占用不同数量的字节。 四级：编码机制 字符编码将码点转换为字节序列。 五级：边界条件 组合 emoji 可能包含多个码点。 六级：补充细节 👩‍💻 是一个可见字素。行内公式 $n = 3$。 $$ \\sum {k=1}^{n} k = \\frac{n(n+1)}{2} $$ FYI 一个很长的中文示例标题用于检查窄栏下自动换行与边框不会遮挡内容 | 字符 | UTF 8 字节 | | | | | A | 1 | | 中 | 3 | | 😀 | 4 | 列表依然可读。 示例仅供样式验收。 Evidence None. Connections None. Sources text: Stage 14 synthetic visual fixture",
+      "links": [],
+      "cardRef": "Engineering/Stage14 Visual Smoke.md",
+      "filename": "Stage14 Visual Smoke.md",
+      "warnings": [],
+      "revision": "bd958e8ff15cb7ed1891309c814190f8de07b4f8628b12e58a277b6f928a6ccc"
+    }
+  }
+}

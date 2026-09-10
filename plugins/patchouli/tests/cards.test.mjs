@@ -31,7 +31,8 @@ test("renders canonical Summary and Detail Markdown with Obsidian-compatible mat
   assert.deepEqual(parsed.categories, ["Research", "量子"]);
   assert.deepEqual(parsed.sourceTypes, ["markdown"]);
   assert.match(rendered.markdown, /## Summary/u);
-  assert.match(rendered.markdown, /## Detail/u);
+  assert.match(rendered.markdown, /## Core/u);
+  assert.match(rendered.markdown, /## FYI/u);
   assert.match(rendered.markdown, /\$E = mc\^2\$/u);
   assert.match(rendered.markdown, /\$\$\n\\int_0\^1 x\^2\\,dx = \\frac\{1\}\{3\}\n\$\$/u);
   assert.doesNotMatch(rendered.markdown, /My Understanding|Annotations/u);
@@ -75,7 +76,7 @@ test("reports malformed frontmatter without failing card parsing", () => {
 
 test("renders predictable placeholders for optional empty sections", () => {
   const rendered = renderCard(draft({ evidence: [], sources: [], connections: [] }));
-  assert.equal((rendered.markdown.match(/_None\._/gu) ?? []).length, 3);
+  assert.equal((rendered.markdown.match(/_None\._/gu) ?? []).length, 4);
 });
 
 test("requires both Summary and Detail", () => {

@@ -1,4 +1,5 @@
 export * from "./cards.js";
+export * from "./capture.js";
 export * from "./checkpoints.js";
 export * from "./configuration.js";
 export * from "./errors.js";

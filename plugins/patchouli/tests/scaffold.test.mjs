@@ -19,7 +19,7 @@ test("manifest and marketplace identify the same local plugin", async () => {
 
   assert.equal(path.basename(pluginRoot), "patchouli");
   assert.equal(manifest.name, "patchouli");
-  assert.match(manifest.version, /^0\.2\.0(?:\+codex\.[0-9a-z-]+)?$/u);
+  assert.match(manifest.version, /^2\.0\.0(?:\+codex\.[0-9a-z-]+)?$/u);
   assert.equal(manifest.license, "UNLICENSED");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./.mcp.json");

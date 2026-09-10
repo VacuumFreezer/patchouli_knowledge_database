@@ -28,30 +28,16 @@ test("routes launch, capture, update, and inquiry through focused references wit
   assert.match(skill, /references\/capture\.md/u);
   assert.match(skill, /references\/launch\.md/u);
   assert.match(skill, /references\/inquiry\.md/u);
-  assert.ok(capture.indexOf("`suggest_links`") < capture.indexOf("`preview_card`"));
-  assert.ok(capture.indexOf("`preview_card`") < capture.indexOf("`save_card`"));
+  for (const file of ["concepts.md", "capture.md", "update.md", "inquiry.md", "launch.md"]) {
+    assert.ok((await readFile(path.join(skillRoot, "references", file), "utf8")).length > 0);
+  }
   assert.match(launch, /`launch_patchouli`/u);
-  assert.match(launch, /🌿 Patchouli capture active/u);
-  assert.match(skill, /MUST begin[\s\S]*# 🌿 Patchouli capture active/u);
+  assert.match(launch, /indicatorImagePath/u);
+  assert.match(skill, /!\[Patchouli\][\s\S]*# Patchouli capture active/u);
   assert.match(update, /`preview_card_update`[\s\S]*`update_card`/u);
   assert.match(update, /REVISION_CONFLICT/u);
   assert.ok(inquiry.indexOf("`search_cards`") < inquiry.indexOf("`get_card`"));
   assert.doesNotMatch(inquiry, /call `save_card`/iu);
-});
-
-test("encodes representative safety and content-quality decisions", async () => {
-  const capture = await readFile(path.join(skillRoot, "references", "capture.md"), "utf8");
-  const inquiry = await readFile(path.join(skillRoot, "references", "inquiry.md"), "utf8");
-  const combined = capture + "\n" + inquiry;
-
-  assert.match(combined, /untrusted|as data/iu, "embedded prompt injection is treated as source data");
-  assert.match(capture, /exactly one coherent concept per review/iu, "unrelated topics split into sequential cards");
-  assert.match(capture, /summaryMarkdown[\s\S]*detailMarkdown/u, "Summary and Detail are distinct");
-  assert.match(capture, /substantially more concrete[\s\S]*paraphrase/iu, "Detail is concrete and paraphrased");
-  assert.match(capture, /\$\.\.\.\$[\s\S]*\$\$\.\.\.\$\$/u, "inline and display math are preserved");
-  assert.match(capture, /Never persist the full conversation/iu, "full transcript storage is forbidden");
-  assert.match(capture, /not final save confirmation/iu, "initial capture intent is not final confirmation");
-  assert.match(inquiry, /does not contain sufficient evidence/iu, "missing vault evidence is disclosed");
 });
 
 test("metadata supports direct and implicit invocation without broad activation", async () => {

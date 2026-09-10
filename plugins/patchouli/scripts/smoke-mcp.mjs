@@ -24,9 +24,11 @@ try {
     "get_patchouli_status",
     "launch_patchouli",
     "list_categories",
-    "preview_card",
+    "preview_capture",
+  "preview_card",
     "preview_card_update",
-    "save_card",
+    "save_capture",
+  "save_card",
     "search_cards",
     "stop_patchouli",
     "suggest_links",
@@ -36,7 +38,7 @@ try {
   if (JSON.stringify(actualTools) !== JSON.stringify(expectedTools)) {
     throw new Error(`Stage 7 tool catalog mismatch: ${actualTools.join(", ")}`);
   }
-  console.log("MCP initialization and tools/list passed (15 Stage 7 tools).");
+  console.log("MCP initialization and tools/list passed (17 v2 tools).");
 } finally {
   await client.close();
 }

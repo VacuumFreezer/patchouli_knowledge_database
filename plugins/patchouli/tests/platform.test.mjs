@@ -177,7 +177,7 @@ test("packaged MCP and hooks run from a relocated path without node_modules", ma
   const client = new Client({ name: "relocation-test", version: "1" });
   try {
     await client.connect(transport);
-    assert.equal((await client.listTools()).tools.length, 15);
+    assert.equal((await client.listTools()).tools.length, 17);
     assert.equal((await client.callTool({ name: "get_configuration", arguments: {} })).structuredContent.status.configured, false);
     await client.callTool({ name: "launch_patchouli", arguments: {} });
   } finally { await client.close(); }

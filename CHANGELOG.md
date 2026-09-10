@@ -1,5 +1,56 @@
 # Changelog
 
+### 2026-09-10T02:05:11-04:00 — Small conversation and card icons
+
+- Resize the user-supplied frame to transparent 15×24 PNG. Embed it in scoped Obsidian CSS at the title’s left edge in reading/Live Preview; no attachment files or Markdown body changes.
+- Recognize exact v2.1 CSS for safe upgrades alongside original v2; preserve custom CSS. Back up the user stylesheet and add the style class to the two known legacy Engineering smoke cards.
+- 83 tests, typecheck, plugin/skill and bundle validators pass. Installed `2.0.0+codex.20260910060342` assets/runtime match source; native reading/editing narrow-card badge checks pass after normal app restart. See `validation/small-icon-smoke.json`.
+
+### 2026-09-10T01:56:35-04:00 — Custom launch indicator
+
+- **Motivation:** Replace the launch leaf emoji with the user-provided `patchouli_knowledge.apng`.
+- **Changes:** Extract frame 0 as transparent 55×90 PNG, bundle `assets/patchouli-launch.png`, and return it as MCP image content with a relocatable absolute `indicatorImagePath`. Update launch skill/reference to display the PNG plus accessible text status after successful activation.
+- **Validation:** 83 tests, typecheck, plugin/skill validators and bundle checks pass. Installed `2.0.0+codex.20260910055552` is enabled; isolated installed launch/relaunch verifies image bytes, path and activation identity. Evidence: `validation/launch-icon-smoke.json`. No vault or current-task activation occurred.
+
+### 2026-09-09T22:02:00-04:00 — Card visual hierarchy (Stage 14)
+
+- **Motivation:** Distinguish card sections and nested explanations beyond font size.
+- **Changes:** Add scoped theme-aware section bars, Core/FYI reading accents and H3–H6 rules in reading/editing views. Atomically upgrade exact shipped v2 CSS while preserving customized snippets, card bytes and appearance preferences. No community plugin dependency.
+- **Validation:** 83 regression tests, typecheck, both validator families, bundle/MCP checks and real isolated pre-compaction hook pass. Initial sandboxed real-hook attempt could not reach synthesis; authorized network-enabled rerun passed. Installed `2.0.0+codex.20260910020002` with 71 matching files; native light/dark reading/editing, narrow/wide and original NLP link checks pass. Original card/settings hashes unchanged; temporary fixture archived. Native/installed details and view-specific styling limits are recorded in the Stage 14 acceptance report.
+
+### 2026-09-09T20:36:49-04:00 — Install and verify v2 (Stage 13)
+
+- **Motivation:** Deliver the accepted Mac plugin and repair the user-provided NLP examples with actual installed/native evidence.
+- **Changes:** Install `2.0.0+codex.20260910002058`; verify package hashes, fresh model previews, installed MCP group writes/replays/updates/conflicts/checkpoints and native Obsidian presentation/backlinks. Back up and update the two original NLP cards; archive only independent smoke notes and keep the NLP configuration.
+- **Limits:** CLI write-tool approval remains separate from content confirmation; its `never` policy blocked the CLI-only write leg. The unchanged reviewed payload passed through the installed local MCP client. Obsidian needed a normal restart for a stale renderer; no application install/uninstall occurred. Native Windows/Intel Mac were unavailable.
+
+### 2026-09-09T20:36:49-04:00 — 2.0.0 concept-aware capture (Stage 12)
+
+- **Motivation:** Preserve independently useful concepts and stop treating examples as equally important mechanisms.
+
+- Inventory domain transitions, general prerequisites and substantive foundations before drafting; review the complete useful set and connect unsaved peers.
+- Explain mechanisms in Core; keep model/version figures and complete worked exercises in FYI. Update inquiry and legacy-card evolution guidance.
+- Real signed-in model evaluations cover five learning conversations, full conversational previews, injection resistance and actual private checkpoint synthesis with SessionEnd retention. Static prompt-wording checks are not used as behavioral evidence.
+- Verification: 81 regression tests on both default and case-sensitive APFS, real browser editing/save/error/cancel, plugin/skill validators, type checking and 17-tool MCP catalog.
+
+### 2026-09-09T20:36:49-04:00 — V2 connected capture (Stage 11)
+
+- **Motivation:** Review unsaved peers and their relationships together and honor one complete-group confirmation.
+
+- Add complete multi-card preview and one-confirmation group save, including new peers and existing-card updates.
+- Bind immutable group reviews to task/configuration/revisions; preflight writes, coalesce retries, report partial results, preserve unsaved checkpoints, and resume without duplicate cards.
+- Add editable concept navigation, Core/FYI, relationship reasons, member selection, refresh after edits and cancellation.
+- Verification: 82 tests and type checking pass. Group writes are individually atomic; restart invalidates pending reviews.
+
+### 2026-09-09T20:36:49-04:00 — V2 card structure (Stage 10)
+
+- **Motivation:** Make knowledge cards readable without losing legacy content, metadata or custom sections.
+
+- Separate durable Core (`detailMarkdown`) from optional FYI, including checkpoints and editable Markdown/math review. Preserve legacy reads and reviewed-update identity/custom content.
+- Scope Obsidian Properties and inline-title hiding to marked cards; preserve the portable H1 and existing vault appearance settings.
+- Retain the frozen Windows v1 fixture as a legacy parsing/search regression; v2 rendering has explicit new expectations.
+
+
 Patchouli records each cohesive source, configuration, test, UI, or skill edit batch here. Entries use an ISO-8601 timestamp with the America/New_York UTC offset and briefly state motivation and changes. Bookkeeping-only updates to this file or `PROGRESS.md` do not require recursive entries.
 
 ## 2026-09-09

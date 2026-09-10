@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-09T15:30:16-04:00
+Last updated: 2026-09-10T01:56:35-04:00
 
 ## How this tracker is used
 
@@ -25,6 +25,11 @@ Last updated: 2026-09-09T15:30:16-04:00
 | 7. Compaction-safe capture and card evolution | Update existing cards and preserve pre-compaction technical detail through explicitly launched checkpoint drafts. | Complete | 2026-09-08T15:40:04-04:00 | 2026-09-08T16:58:18-04:00 |
 | 8. mac build — source and parity tests | Build macOS support and verify the complete Windows feature set before registration or installation. | Complete | 2026-09-09T02:54:11-04:00 | 2026-09-09T10:22:45-04:00 |
 | 9. mac build — registration and installation | Register, install, and verify the tested plugin in Codex and Obsidian on this Mac. | Complete | 2026-09-09T10:01:25-04:00 | 2026-09-09T10:46:22-04:00 |
+| 10. v2 card structure and compatibility | Define reusable concept boundaries and introduce Core/FYI with unobtrusive metadata and one visible title. | Complete | 2026-09-09 | 2026-09-09 |
+| 11. v2 connected group review | Preview related new cards and updates together, resolve links before saving, and safely confirm the reviewed group once. | Complete | 2026-09-09 | 2026-09-09 |
+| 12. v2 capture workflow and acceptance | Teach capture/checkpoints to separate reusable concepts, verify actual model behavior, and pass full compatibility checks. | Complete | 2026-09-09 | 2026-09-09 |
+| 13. v2 installation and final smoke test | Install the accepted package and verify the complete workflow in fresh Codex and native Obsidian. | Complete | 2026-09-09 | 2026-09-09 |
+| 14. Card visual hierarchy | Make card sections and subheadings clearly distinguishable in Obsidian, then validate and install the scoped presentation update. | Complete | 2026-09-09 | 2026-09-09 |
 
 ## Active cross-stage revision
 
@@ -371,10 +376,140 @@ Paths in this inventory are relative to `plugins/patchouli` unless otherwise sta
 
 **Evidence:** [Mac acceptance report](validation/mac-build.md), [installed package identity](validation/mac-installation.json), and [asserted host results](validation/mac-host-acceptance.json). All 60 accepted plugin files other than the manifest-only cachebuster match the installed copy. A real host compaction produced two private drafts without saving cards; session end and reopening preserved both exactly. Confirmed update consumed one, separately confirmed creation consumed the other, and an identical save retry returned the same card without duplication. Two installed MCP restarts retained configuration while fresh task IDs saw no drafts. Native Obsidian and the bundled review UI passed visual checks; Codex CLI exercised conversational review, while the browser harness exercised the actual MCP App. Native Codex inline rendering, native Windows, and Intel Mac execution are not claimed. Temporary vaults, servers, Obsidian app/profile, and the case-sensitive test volume were cleaned up; disposable execution logs remain under temporary storage. No personal vault was configured or modified.
 
+## Version 2 — connected concepts and readable cards
+
+**Planning status:** Complete — 2026-09-09T19:46:15-04:00. One dedicated planning agent read the existing tracker, README, card types/rendering, MCP schemas and preview tokens, review UI, checkpoint prompt/schema, capture/update skill references, and the last three turns of task `01a087b5-7a12-77e2-8d22-64807bbd763f` through `read_thread`. At the time of that planning-only change, only `PROGRESS.md` was edited and Stages 10–13 had not begun. The completed implementation and evidence are recorded below.
+
+**Observed baseline:** The referenced task, “记录 NLP Tokenization 课程”, produced two cards only after the user requested a split. Both saved drafts had `connections: []`, even though Tokenization's UTF-8/byte representation depends on the separate Unicode concept. Current capture instructions prescribe one concept per review and sequential review of unrelated topics; `suggest_links` searches stored cards, so it cannot discover a peer that exists only as another unsaved draft. `CardDraft` has one undifferentiated `detailMarkdown`, and `renderCard` emits frontmatter followed by an H1 that duplicates Obsidian's inline title. These are baseline findings, not evidence that v2 behavior already works.
+
+**Sequence:** Complete Stages 10 → 11 → 12 → 13, with exactly one stage In progress. Every stage includes focused implementation tests and a recorded exit gate. A failure discovered after installation reopens the affected implementation stage; rebuild and reaccept changed artifacts before reinstalling. Keep the existing single-card interfaces and Windows/macOS functionality while adding a coherent group workflow.
+
+**Acceptance examples:** A Tokenization conversation that develops Unicode/UTF-8 must produce separate reusable cards without a user correction and show a reasoned connection before either card exists on disk. A substantive Transformer explanation in a broader large-model conversation must become an independent foundational card; a passing name-drop or a model-specific example alone must not force an empty card. Byte-level BPE's mechanism belongs in Core; GPT model vocabulary figures and the “20 words, 10 containing s” worked example belong in FYI. Sharing a session is a reason to examine a relationship, not a reason to invent one.
+
+### Stage 10 — v2 card structure and compatibility
+
+**Status:** Complete.
+
+**Goal:** Establish the v2 concept and document contracts, and implement a readable card representation that preserves existing data and platform behavior.
+
+#### Planned implementation and checks
+
+- [x] Mark Stage 10 In progress; record the current source/package identity and read the referenced NLP cards as regression inputs without rewriting them during diagnosis.
+- [x] Define when a concept deserves a separate card: a field/topic transition, a more general prerequisite, or a substantively explained foundational concept with independent retrieval value. Define when closely related details stay together and when an incidental example belongs only in FYI. Do not hard-code a fixed card count or split every named term.
+- [x] Define a concrete, validated Core/FYI contract across types, normalization, rendering, parsing, search, MCP schemas, review UI, conversational fallback, checkpoint schema, and templates. Prefer retaining `detailMarkdown` as the compatible Core field and adding optional `fyiMarkdown`, rendering them as Core/FYI. Core must retain durable mechanisms, qualifications, formulas, and derivations; FYI must hold optional instances, version-dependent figures, worked examples, and peripheral observations. Specify empty-FYI behavior and avoid retaining competing unsynchronized representations.
+- [x] Preserve reads/search of legacy `Detail` cards and outstanding pre-v2 checkpoint drafts. Define an explicit normalization path for legacy input and safe reviewed updates; retain useful old content rather than silently classifying it away or migrating the whole vault.
+- [x] Keep stable UUIDs, creation times, custom frontmatter, custom sections, evidence, sources, and selected links through reviewed updates; ensure new canonical sections are not duplicated as custom sections.
+- [x] Eliminate duplicate title presentation while preserving standard YAML, the card title, and portable Markdown. Prefer a per-card `cssclasses` marker and a scoped Obsidian snippet that hides Properties and Obsidian's inline title only on Patchouli cards while retaining the body H1. Decide how the configured vault receives/enables the snippet, preserve existing custom classes/settings, and verify existing configured vaults as well as first-time setup. Do not globally hide unrelated vault properties or titles. Prove the chosen behavior in native Obsidian before final acceptance.
+- [x] Add focused tests for Core/FYI validation and round trips; old/new cards and checkpoints; math/code preservation; custom fields/sections; search; one rendered title; and metadata visibility contract. Update README, the card template, and CHANGELOG with the chosen representation.
+
+**Exit criterion:** The new format is implemented across its consumers, legacy cards/checkpoints remain readable, reviewed updates retain identity and custom content, and focused type/core/MCP/UI tests pass. The representation and compatibility rules are documented; native Obsidian appearance remains an explicit final smoke requirement.
+
+**Evidence:** `pnpm typecheck` and `pnpm test`: 72/72 passing. Legacy Windows fixture remains byte-for-byte unchanged and is used for parser/search parity. New format tests cover Core/FYI normalization, math/code, custom sections/classes, scoped CSS installation and preserved appearance settings, preview read-only behavior, existing-configuration upgrade on save, invalid settings and symlink containment. Native appearance remains Stage 13. Baseline source: `2f2a423`, package `0.2.0`; both referenced NLP files were read without mutation.
+
+### Stage 11 — v2 connected group review and confirmation
+
+**Status:** Complete (reaccepted after browser-acceptance correction).
+
+**Goal:** Let the user review all proposed concepts and their links together, including peers not yet saved, and confirm the complete reviewed group with one clear action.
+
+#### Planned implementation and checks
+
+- [x] Mark Stage 11 In progress after Stage 10 passes. Define a group contract, provisionally exposed through `preview_capture` / `save_capture`, that can contain new cards and reviewed existing-card updates, while retaining the existing single-card preview/save/update interfaces.
+- [x] Give proposed group members stable temporary identities and server-derived destination references. Resolve semantically justified peer connections before saving; distinguish pending peers from existing vault cards, prevent self/dangling/duplicate targets, and show the relationship reason and selected state in the preview.
+- [x] Combine relevant existing-card candidates with in-group relationships. Do not require lexical overlap or an already-written file for a true prerequisite relationship; do not manufacture all-to-all links merely because concepts appeared in one conversation.
+- [x] Build complete editable group review in the MCP App and conversational fallback, covering every card's title, categories, Summary, Core, FYI, evidence, sources, and selected connections. Title edits or member selection changes must update peer targets consistently before final save; removed members cannot leave selected unresolved links.
+- [x] Support one explicit “save all” confirmation for the complete visible reviewed group, including the user's “都保存” phrasing. Preserve single-card review when requested and require a new visible review when substantive conversational revisions change the proposed group; do not impose repeated per-card approval on an already-reviewed group.
+- [x] Bind the group token to its task, operation/membership, configuration, target revisions, and checkpoint references. Preserve expiry, cancellation, concurrent same-token coalescing, idempotent retries, and create/update separation, including cached replay checks.
+- [x] Preflight every destination, existing target revision, and selected peer link before mutation. Specify and test grouped-write failure semantics: no silent partial success, no overwrite of unrelated/manual edits, safe recovery or rollback, and an identical retry that cannot duplicate already-committed cards. Do not claim cross-file crash atomicity unless implemented and tested.
+- [x] Consume a checkpoint revision only when every selected group member that uses it has been saved successfully. Preserve unsaved drafts after cancellation, partial failure, conflicts, or omitted members; handle one checkpoint feeding multiple concepts without early deletion.
+- [x] Add meaningful MCP/core/UI integration tests for two new linked cards, mixed update/create, renamed peers, deselection, duplicate destinations, conflict/failure cleanup, shared checkpoints, task/configuration isolation, invalid/expired tokens, concurrent writes, retry, and no write before confirmation. Revalidate existing single-card behavior.
+
+**Exit criterion:** Two previously nonexistent cards can be fully previewed with a selected semantic connection and saved through one confirmed group action; mixed updates retain identity; cancellation/failure/retry and checkpoint retention behave as documented; all focused group and legacy single-card tests pass.
+
+**Evidence:** `pnpm typecheck` and `pnpm test`: initially 82/82 pass; reacceptance 81/81 after removing a prompt-wording test in favor of actual model evaluation. Cancellation after zero-write preflight failure now has a regression assertion. Added real MCP group round trip, seven group-engine scenarios (with multiple conflict/alias/task/config/retry cases), and two group UI interaction tests. New tools are `preview_capture` and `save_capture`; cancellation uses `save_capture(action="cancel")`. Reviewed payloads are immutable server-side; edits require refresh. Writes are individually atomic, with in-process receipts for safe partial retry until token expiry. Restart invalidates tokens; re-read files and review remaining work rather than claiming cross-file crash atomicity. Shared checkpoints survive any group failure or omitted associated member.
+
+### Stage 12 — v2 capture workflow and pre-installation acceptance
+
+**Status:** Complete.
+
+**Goal:** Make autonomous concept splitting, Core/FYI classification, and connected group review work in actual model-driven capture and compaction, then accept the full package before installation.
+
+#### Planned implementation and checks
+
+- [x] Mark Stage 12 In progress after Stage 11 passes. Update skill routing/capture/update/inquiry references and checkpoint synthesis instructions to inventory reusable concepts before drafting, independently evaluate cross-field/general/foundational boundaries, and propose the complete useful set without asking which card to start with.
+- [x] For each concept, search and read plausible existing cards, distinguish update from creation, retain existing useful knowledge, and form a connected review group when justified. Explain meaningful conceptual boundaries and connection reasons briefly in the review, without saving a full transcript.
+- [x] Apply Core/FYI consistently in active-conversation capture, compaction synthesis, continued-session updates, peer-link reasoning, and inquiry. Preserve the launch indicator, explicit task activation, bounded private drafts, session-end retention, and untrusted-input boundaries.
+- [x] Add regression scenarios for the actual Tokenization/Unicode case; a cross-domain tangent; a substantively explained general prerequisite/Transformer; a coherent one-topic conversation; and unrelated topics that should remain unlinked. Include a shared checkpoint that needs multiple final cards, Core/FYI examples, malicious source instructions, and a missing-evidence inquiry.
+- [x] Run a real signed-in model capture and real checkpoint synthesis in isolated state against representative learning conversations. Observe the actual tool calls and complete preview content: independent cards must appear without a user-requested split, supported peer connections must be present before writes, and concrete examples must be in FYI. Separate model evidence from fixture/contract tests; correct workflow failures and rerun the affected scenario.
+- [x] Run the full regression suite, type checking, fresh build, plugin/skill validators, bundle verification, MCP catalog/schema/valid-error checks, and hook smoke. Retain macOS and Windows launch/configuration coverage, case/Unicode path safety, chosen-folder-without-extra-`Patchouli` behavior, metadata preservation, token concurrency, and lifecycle isolation. Record any unavailable native platform execution accurately.
+- [x] Verify the built review UI in a real browser, including the complete group, edited titles, Core/FYI Markdown/math, selected peer connections, confirmation, cancellation, error reporting, and the full conversational fallback.
+- [x] Record the release version, tested commands/results and totals, real-model findings, limitations, accepted source/artifact hashes, and CHANGELOG entries before installation. Treat the new tool catalog as an intentional contract change and keep all existing public functions working.
+
+**Exit criterion:** The staged v2 package passes the complete regression/validation gate, real model capture independently separates and connects the representative concepts with correct Core/FYI previews, and checkpoint synthesis retains the same boundaries and content. Accepted artifacts are identified; no required source/runtime failure is deferred to installation.
+
+**Evidence:** `validation/v2/acceptance.md`, `model-results.json`, `checkpoint-result.json` and `accepted-sha256.json`. Five actual model capture runs pass without writes; actual checkpoint synthesis plus SessionEnd retention passes after refining exercise placement. Real browser group edit/refresh/save/error/cancel passes. 81/81 regression tests pass on default and case-sensitive APFS; type/build/bundle/MCP and both validator families pass. Base version `2.0.0`. Native Windows/Intel Mac execution unavailable; native Obsidian reserved for Stage 13.
+
+### Stage 13 — v2 installation and final smoke test
+
+**Status:** Complete.
+
+**Goal:** Install the accepted version and demonstrate the complete workflow with the installed plugin, the user's local Obsidian, and the configured card folder.
+
+#### Planned implementation and checks
+
+- [x] Mark Stage 13 In progress only after Stage 12 acceptance. Inspect current registration/version; use the supported plugin cachebuster/reinstall workflow, preserve unrelated plugins/settings, verify enabled state, and compare installed file hashes with the accepted package.
+- [x] Start a fresh Codex context that loads the new skill/tools/hooks. Verify the actual configured vault/cards directory and keep cards directly in the requested folder; do not create an extra `Patchouli` directory.
+- [x] Run a final smoke using clearly identified test cards in a disposable acceptance folder or the user-authorized target. Capture the representative learning material without prompting the model to split it; inspect the initial multi-card Core/FYI review and semantic peer link before anything is written.
+- [x] Confirm the complete visible review once, verify all selected cards and links are saved, and repeat the identical save to prove no duplication. Exercise cancellation, a reviewed existing-card update, a conflict, and restart/read persistence with preserved IDs/creation times/custom fields and retained unsaved checkpoints.
+- [x] In native Obsidian, open the actual generated cards and verify a single visible title, unobtrusive Properties, separate Core/FYI, Chinese/emoji/code/math rendering, working outgoing peer links, and derived backlinks. Do not infer native appearance or backlink behavior from Markdown or jsdom alone.
+- [x] Run installed-plugin inquiry that reads and cites the saved related cards, plus an insufficient-evidence inquiry. Exercise actual launched compaction/session-end retention and selective consumption where the new grouped/checkpoint behavior changes that lifecycle.
+- [x] Correct the two existing NLP examples named by the user: put durable material in Core and model figures/worked examples in FYI, add justified Tokenization↔Unicode connections, and apply the readable presentation. Back up the exact original files and prepare complete MCP update previews before mutation; the user's current request authorizes these concrete corrections without repeated per-card permission questions. Preserve original conceptual content, identities, creation times, provenance, and manual fields, then report the exact affected paths. Keep the independent smoke data clearly identified, preserve the user's NLP configuration, and do not silently migrate unrelated cards.
+- [x] Restore any configuration changed solely for isolated testing, remove only disposable test artifacts, and record the installed version, file paths, test totals, actual model/UI results, and host/platform limits in a final validation report. Mark the stage Complete only when the required installed smoke passes.
+
+**Exit criterion:** The accepted v2 plugin is installed/enabled, a fresh task demonstrates autonomous concept splitting and pre-save peer connections, one confirmed group save produces readable linked cards, and native Obsidian plus inquiry/update/checkpoint checks pass. No required smoke result is assumed from fixtures or a previous plugin version.
+
+**Evidence:** `validation/v2/final-smoke.md`, `smoke-result.json`, `installed.json`, `installed-inquiry.md` and `installed-checkpoint-result.json`. Installed/enabled `2.0.0+codex.20260910002058`; 69 non-manifest installed hashes match acceptance. Fresh installed model capture splits/connects correctly; exact reviewed content saves/replays through the installed local MCP client. Ten installed protocol checks and actual installed hook/SessionEnd retention pass. Native Obsidian verifies one title, hidden Properties, Core/FYI, math/code/Chinese/emoji, outgoing links and named backlinks. Both original NLP cards are backed up and corrected with original IDs/creation times preserved; default NLP config is unchanged; independent smoke cards are archived outside the vault. Host limits are explicit: CLI write tools remain blocked by approval policy `never` (the CLI-only write leg is not claimed as passing), and no native Windows/Intel Mac run occurred. A normal Obsidian restart was needed for its stale renderer; the app was never installed/uninstalled during v2 work.
+
+## Stage 14 — Card visual hierarchy
+
+**Status:** Complete.
+
+**Goal:** Improve the visual hierarchy of Patchouli cards so readers can immediately distinguish Core, FYI and nested explanations without relying only on heading size, while preserving portable Markdown, card content and the user's vault preferences.
+
+### Planned implementation and checks
+
+- [x] Mark Stage 14 In progress before implementation. Record the current scoped snippet, enabled appearance settings and representative NLP card content hashes as the baseline; retain the completed Stage 13 evidence separately.
+- [x] Research relevant Obsidian community-marketplace options and their primary documentation alongside native CSS snippets. Compare heading/section styling, per-note scope, reading and Live Preview support, theme compatibility, maintenance and required dependencies. Record the selected approach and why it addresses the hierarchy problem; marketplace research does not itself require installing an additional plugin.
+- [x] Define and implement a readable hierarchy for the title, Summary, Core, FYI, supporting sections and H3–H6 subheadings using clear spacing, borders or backgrounds as well as typography. Make Core prominent and FYI visibly secondary without hiding its contents or relying on color alone. Keep one visible title and unobtrusive Properties.
+- [x] Scope presentation to `patchouli-card` notes and preserve standard Markdown semantics, text, metadata, custom classes/sections, links and IDs. Ensure ordinary notes and the user's existing CSS/theme choices are not globally restyled. Keep source-mode content editable and portable without a community-plugin dependency unless the evaluated choice explicitly justifies one.
+- [x] Implement a safe presentation upgrade from the exact v2-managed snippet already installed: recognize the known previous content, preserve a recoverable original, avoid overwriting user-modified snippet content, and preserve unrelated appearance settings and enabled snippets. Retain path containment, symlink safeguards, malformed-configuration protection, revision checks and repeat-install behavior.
+- [x] Verify light and dark themes, narrow panes, long Chinese headings, emoji, lists, code, inline/display math, tables and links. Check heading levels in reading mode and Live Preview; avoid text clipping, illegible contrast or layout shifts that impair editing. Record unsupported third-party-theme behavior honestly.
+- [x] Add focused regression tests for managed-snippet upgrades, custom-snippet preservation, scoping, repeated configuration/save, and unchanged card content. Run the full relevant regression suite, type checking, fresh build, plugin/skill validators, bundle verification and MCP smoke; retain the existing capture, Core/FYI, group-review and inquiry contracts.
+- [x] Record the chosen design, source references, test results and accepted artifact hashes in a Stage 14 validation report, and update README/CHANGELOG for the actual implementation. Complete the pre-installation checks before installing the changed package.
+- [x] Use the supported Codex plugin cachebuster and reinstall flow, verify the enabled version and installed hashes, and test the installed runtime's presentation provisioning. Back up affected user-vault presentation files before applying the update; preserve the configured `NLP` destination and avoid extra `Patchouli` folders.
+- [x] Perform the final smoke in the actual installed Obsidian app with the two existing NLP cards and clearly marked disposable fixtures where necessary. Visually inspect the stronger Core/FYI and nested-heading boundaries in light/dark and narrow views, single title/hidden Properties, math/code/tables, outgoing links and backlinks, and verify an ordinary note remains unaffected. Confirm card content hashes stay unchanged for presentation-only updates and exercise an installed preview/save/read or inquiry round trip to catch runtime regressions.
+- [x] Restore theme/window settings changed only for testing, remove only disposable fixtures, and record screenshots or equivalent native visual evidence, installed version, affected paths, test totals and any host limits. Mark Stage 14 Complete only after the required installed and native Obsidian smoke passes.
+
+**Exit criterion:** Installed Patchouli cards have a clearly distinguishable, theme-aware section and subheading hierarchy in native Obsidian; the existing v2 snippet upgrades safely; card contents and unrelated notes/settings remain intact; regression and final installed smoke evidence are recorded. Browser or CSS assertions alone do not establish native visual acceptance.
+
+**Evidence:** `validation/visual-hierarchy/acceptance.md`, `baseline.json`, `accepted-sha256.json`, `installed-smoke.json` and `final-checks.json`. 83 regression tests, typecheck, both validator families, bundle/MCP and real isolated hook passed. Installed version `2.0.0+codex.20260910020002` is enabled; 71 installed hashes match. Native Obsidian light/dark, narrow/wide, reading/Live Preview, formula/table/link/backlink and ordinary-note checks pass. Original NLP/Welcome/appearance hashes unchanged; fixture archived, original theme/sidebars restored. Core/FYI-specific accents apply in reading view; general heading hierarchy applies in both views.
+
 ## Current next action
+
+Stage 14 is complete; no active development stage remains. The visual update is installed and applied to the user vault. Use a new Codex task for the updated plugin runtime; existing cards already display the new styling. Acceptance and limits are in `validation/visual-hierarchy/acceptance.md`. Stages 1–13 remain complete.
+
+### Previous completed follow-up
 
 Stages 8 and 9 are complete. The subsequent Engineering smoke test passed its 11 MCP checks; its visual coverage and limits are in `validation/engineering-smoke-2026-09-09.md`.
 
 **Specified-folder correction complete — 2026-09-09T15:30:16-04:00:** Use the user's named card folder directly, without appending `Patchouli`. Both smoke cards now live directly in `/Users/tongshen/Koumakan_Library/Engineering`, with identical content hashes, identities and links. The empty nested folder was removed, and MCP persisted `cardsDirectory: "Engineering"`. The clarified skill is installed and enabled as `0.2.0+codex.20260909192920`; 12 targeted tests, repository/canonical validators, installed hashes, and actual installed configuration/search/read checks passed. This is a skill/configuration correction; the accepted runtime bundles are unchanged. Evidence: `validation/engineering-folder-correction.json`.
 
-Start a fresh Codex task to load the updated plugin guidance. The vault is already configured; use `$patchouli launch` when you want pre-compaction capture for that task.
+The vault remains configured to `NLP`. V2 preserves `$patchouli launch` for explicit pre-compaction capture. The historical pre-v2 installation above has been superseded by Stage 13.
+
+### Completed launch-icon follow-up — 2026-09-10T01:56:35-04:00
+
+Replaced the launch leaf with frame 0 of the user-supplied APNG. The packaged transparent PNG is 55×90 pixels; launch returns image content and its installed path, and the skill displays it with text status. 83 tests and validators pass; installed isolated launch/relaunch smoke passes. Installed enabled version: `2.0.0+codex.20260910055552`. Evidence: `validation/launch-icon-smoke.json`. Stages 1–14 remain complete.
+
+### Completed small-icon follow-up — 2026-09-10T02:05:11-04:00
+
+Conversation icon resized to 15×24; all new marked cards show an embedded title badge in native reading/editing views. Installed and applied `2.0.0+codex.20260910060342`; backed up and tagged two legacy Engineering test cards. 83 tests and native visual smoke pass. Evidence: `validation/small-icon-smoke.json`.

@@ -1,0 +1,43 @@
+{
+  "installedVersion": "2.0.0+codex.20260910002058",
+  "checkedAt": "2026-09-10T00:34:29.346426+00:00",
+  "nativeObsidian": "1.13.7",
+  "nativeChecks": [
+    "one body title; inline title and Properties hidden",
+    "Core/FYI, Chinese, emoji, table, code and math render",
+    "clicking peer link opens its target",
+    "Backlinks Linked mentions names Tokenization as source"
+  ],
+  "correctedCards": [
+    {
+      "cardRef": "NLP/Tokenization-共享词表、Byte-level BPE 与字符级约束.md",
+      "id": "e4018f70-1712-45f0-88d7-9c72bf819e7b",
+      "createdAt": "2026-09-09T20:40:03.060Z",
+      "sha256": "99276b7a627cfe82b58749a504e944138ec63cfdb81aa5d7bad9e32d26f752e7"
+    },
+    {
+      "cardRef": "NLP/Unicode 与 UTF-8-字符、码点和字节.md",
+      "id": "94e7a06b-dea1-4e11-8c0c-5caf8a122f4c",
+      "createdAt": "2026-09-09T20:40:42.046Z",
+      "sha256": "7bd0980a59bf93e99bf6f934b149f7b02e02655d26293989c626f7614be93023"
+    }
+  ],
+  "backupDirectory": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909",
+  "syntheticCardsArchived": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909/smoke",
+  "defaultConfigurationUnchanged": true,
+  "installedProtocolChecks": [
+    "installed launcher exposes 17 tools",
+    "actual launch and task status",
+    "complete connected preview before writes",
+    "cancel invalidates token and retains private drafts",
+    "one group save, identical retry and selective shared consumption",
+    "reviewed update retains identity and creation time",
+    "manual conflict retained with unsaved checkpoints",
+    "restart preserves cards and rejects expired process-local tokens",
+    "missing-evidence search returns no cards",
+    "installed SessionEnd stops capture and retains remaining drafts"
+  ],
+  "sameTokenReplayNoDuplicates": true,
+  "cliWriteLimitation": "Codex CLI refuses write MCP tools under approval_policy=never even after workspace-write. Model preview and confirmation intent passed; exact unchanged payload was re-previewed and saved with the installed local MCP client. No host approval policy was changed.",
+  "obsidianRefresh": "Existing running renderer retained stale content; Force Reload stayed blank. Normal Quit and relaunch loaded the scoped snippet and updated cards. No Obsidian installation/uninstallation occurred."
+}

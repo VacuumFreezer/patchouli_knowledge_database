@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0+codex.20260910002058",
+  "root": "/Users/tongshen/.codex/plugins/cache/personal/patchouli/2.0.0+codex.20260910002058",
+  "hashesVerified": 69,
+  "backups": [
+    {
+      "path": "/Users/tongshen/Koumakan_Library/NLP/Unicode 与 UTF-8-字符、码点和字节.md",
+      "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909/Unicode 与 UTF-8-字符、码点和字节.md",
+      "sha256": "7b47883f8093239d13ac57637ffa9c9b0d4be057c209e91e89b480f65ab97713"
+    },
+    {
+      "path": "/Users/tongshen/Koumakan_Library/NLP/Tokenization-共享词表、Byte-level BPE 与字符级约束.md",
+      "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909/Tokenization-共享词表、Byte-level BPE 与字符级约束.md",
+      "sha256": "c2b2657d99b839052fb274c6545a8e508a7b80b13f6a74b2c5529a7561a657a3"
+    },
+    {
+      "path": "/Users/tongshen/Koumakan_Library/.obsidian/appearance.json",
+      "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909/appearance.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "/Users/tongshen/Library/Application Support/Patchouli/configuration.json",
+      "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/v2-20260909/configuration.json",
+      "sha256": "f65f162670e989a86ff266e565390a97f7124693bebf46c43247b4b74c3aaa2e"
+    }
+  ]
+}

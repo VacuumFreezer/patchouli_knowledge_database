@@ -1,0 +1,126 @@
+{
+  "plugin": "/Users/tongshen/.codex/plugins/cache/personal/patchouli/2.0.0+codex.20260910002058",
+  "sessionId": "v2-checkpoint-1788999821212",
+  "generated": {
+    "code": 0,
+    "stderr": ""
+  },
+  "retainedAfterSessionEnd": true,
+  "checkpoints": [
+    {
+      "launchId": "05593b86-4deb-43e5-b5e2-ff5b0535bc7f",
+      "checkpointId": "a020a817-c8c7-4c75-8ca7-dc806d10f60e",
+      "revision": "5f6a1064b0e129247c2dd2f492569e4d0896408924e7c3a4789921a44111a6fb",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:24:37.907Z",
+      "updatedAt": "2026-09-10T00:24:37.907Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "Unicode、UTF-8 与可见字符的区别",
+        "filename": "Unicode、UTF-8 与可见字符的区别.md",
+        "categories": [
+          "计算机基础",
+          "字符编码"
+        ],
+        "summaryMarkdown": "Unicode 用码点标识字符，UTF-8 将码点编码为字节；屏幕上的一个可见字素可能包含多个码点，因此字素数、码点数和字节数不能混用。",
+        "detailMarkdown": "Unicode 为字符分配码点；UTF-8 将一个 Unicode 标量值编码为 1 至 4 个字节。码点是字符的编号，字节是编码后的存储单位。\n\n可见字素不一定对应一个码点：组合序列可以由多个码点共同显示为一个字素。因此，统计文本长度前必须明确统计的是字素、码点还是字节。\n\n常见汉字通常占 3 个 UTF-8 字节，但部分罕见汉字占 4 个字节，不能把“汉字都是 3 字节”当作通则。这些区别适用于一般文本系统，也是理解分词结果的基础。",
+        "fyiMarkdown": "| 示例 | Unicode 码点 | UTF-8 十六进制字节 | 字节数 |\n| --- | --- | --- | --- |\n| A | U+0041 | 41 | 1 |\n| 中 | U+4E2D | E4 B8 AD | 3 |\n| 😀 | U+1F600 | F0 9F 98 80 | 4 |\n\n👩‍💻 由女人、零宽连接符（ZWJ）和电脑三个码点组成，UTF-8 共占 11 个字节，但通常显示为一个字素。",
+        "evidence": [
+          {
+            "claim": "对话区分了 Unicode 码点、UTF-8 字节和可见字素，并说明部分汉字需要 4 个字节。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "launchId": "05593b86-4deb-43e5-b5e2-ff5b0535bc7f",
+      "checkpointId": "26bfdbcb-0ecc-4d8d-9b9a-3cdddb98998f",
+      "revision": "8cfc40669c2fc38b1a7608179e755c8b3d8cb880a5ea7005588b6638f3e4a7a2",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:24:37.907Z",
+      "updatedAt": "2026-09-10T00:24:37.907Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "Byte-level BPE：为什么 token 数不等于字数",
+        "filename": "Byte-level BPE-为什么 token 数不等于字数.md",
+        "categories": [
+          "自然语言处理",
+          "Tokenization"
+        ],
+        "summaryMarkdown": "Byte-level BPE 从 UTF-8 字节出发，用训练得到的合并规则编码文本。一个 token 可以覆盖多个字符，也可以只包含某个字符的部分字节。",
+        "detailMarkdown": "Byte-level BPE 的基本流程：\n\n1. 将文本转换为 UTF-8 字节序列，以 256 种字节值为基础单位。\n2. 在训练语料中依据相邻单元的频率逐步学习合并，形成更长的词表单元。\n3. 编码新文本时使用固定词表和既定合并规则，输出 token ID；不会为每段输入重新学习词表。\n\n共享 tokenizer 的不同语言使用同一个 token ID 空间。token 边界不必与字符边界重合：一个 token 可能跨越多个字符，也可能只覆盖一个字符的一部分字节。因此，中文或 emoji 的 token 数不能直接按字数、码点数或 UTF-8 字节数推算。\n\n词表大小、embedding 维度与上下文窗口是不同的量：词表大小决定可用 token ID 的数量，embedding 维度决定每个 token 向量的长度，上下文窗口限制一次可处理的 token 序列长度。",
+        "fyiMarkdown": "课程曾以 GPT-5 映射到 `o200k_base`、词表约 20 万为例。这属于具体模型与 tokenizer 的版本相关信息，对话未提供独立核验来源；使用时应核对对应版本。词表约 20 万并不意味着上下文窗口就是 20 万 token。",
+        "evidence": [
+          {
+            "claim": "对话解释了 byte-level BPE 的字节基础、频率合并、固定规则编码，以及 token 与字符边界不一致的原因。",
+            "sourceReference": "Current Codex conversation"
+          },
+          {
+            "claim": "对话明确区分词表大小、embedding 维度和上下文窗口，并给出课程中的 tokenizer 示例。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "launchId": "05593b86-4deb-43e5-b5e2-ff5b0535bc7f",
+      "checkpointId": "0d6b9d71-d508-46b4-a7ad-321d21896ca1",
+      "revision": "42e84f17f8d0b3ee58309ad9e0fc6e3da71c757c577320f87d7f3bddb34fbd8f",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:24:37.907Z",
+      "updatedAt": "2026-09-10T00:24:37.907Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "用确定性代码验证文本计数约束",
+        "filename": "用确定性代码验证文本计数约束.md",
+        "categories": [
+          "文本处理",
+          "生成结果验证"
+        ],
+        "summaryMarkdown": "按 token 生成文本不直接保证单词级或字符级计数约束。把要求转成明确的计数规则，再用确定性代码检查，比依赖模型自检更可靠。",
+        "detailMarkdown": "验证受约束文本时，先明确切分方法、大小写规则和匹配条件，再分别计算总数与满足条件的数量。\n\n若按约定将文本切分为 $w_1,\\ldots,w_n$，匹配条件为 $P$，则匹配数量为：\n\n$$\nC=\\sum_{i=1}^{n}\\mathbf{1}[P(w_i)]\n$$\n\n目标为总数 $N$、匹配数 $K$ 时，应同时验证 $n=N$ 与 $C=K$。\n\nPython 的 `split()` 按空白切分，适合明确采用空白分词规则的练习；它不是通用语言学分词器。字符包含判断统计的是“含目标字符的单词数”，同一个单词内重复出现该字符也只计一次。大小写不敏感时，应先统一大小写。\n\n模型按 token 生成，不能直接保证这些更高层的计数要求；模型自检也可能出错。确定性代码可以可靠检查已经形式化的规则，但规则本身必须符合题意。",
+        "fyiMarkdown": "完整练习：生成 20 个英文单词，其中恰好 10 个单词含字母 `s`，忽略大小写。\n\n> Several small birds sang sweet songs beside still streams as a gentle wind carried their cheerful melody through the valley.\n\n```python\ntext = \"Several small birds sang sweet songs beside still streams as a gentle wind carried their cheerful melody through the valley.\"\nwords = text.split()\ncount_s = sum('s' in w.lower() for w in words)\nassert len(words) == 20\nassert count_s == 10\n```\n\n按上述规则，该句有 20 个单词，前 10 个单词均含 `s`，后 10 个均不含。",
+        "evidence": [
+          {
+            "claim": "对话给出 20 个单词、10 个含 s 的练习及 Python 检查方法，并指出 token 生成与模型自检不能保证计数约束。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    }
+  ]
+}

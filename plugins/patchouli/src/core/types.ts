@@ -38,7 +38,10 @@ export interface CardDraft {
   title: string;
   categories: string[];
   summaryMarkdown: string;
+  /** Durable Core knowledge; retains the v1-compatible field name. */
   detailMarkdown: string;
+  /** Optional examples and peripheral knowledge. */
+  fyiMarkdown?: string;
   evidence: EvidenceDraft[];
   sources: SourceDraft[];
   connections: ConnectionDraft[];

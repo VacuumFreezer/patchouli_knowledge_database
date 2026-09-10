@@ -1,0 +1,27 @@
+{
+  "files": {
+    "NLP/Unicode 与 UTF-8-字符、码点和字节.md": {
+      "sha256": "7bd0980a59bf93e99bf6f934b149f7b02e02655d26293989c626f7614be93023",
+      "unchanged": true
+    },
+    "NLP/Tokenization-共享词表、Byte-level BPE 与字符级约束.md": {
+      "sha256": "99276b7a627cfe82b58749a504e944138ec63cfdb81aa5d7bad9e32d26f752e7",
+      "unchanged": true
+    },
+    ".obsidian/appearance.json": {
+      "sha256": "913ac132b006b643c78a43fe030eccff5452f1258cb6fb45b824878a1c5ac4cd",
+      "unchanged": true
+    },
+    ".obsidian/snippets/patchouli-cards-v2.css": {
+      "sha256": "3c3e8e4ad41b7c081933a705621846a29396cb7ea0f007bad25d2a8ac4e54470",
+      "unchanged": false
+    },
+    "Welcome.md": {
+      "sha256": "ecd0dfb6b21143ff52cfe36f93636df57e5b21773c101491b86f10ce17556ca8",
+      "unchanged": true
+    }
+  },
+  "installedFilesMatched": 71,
+  "fixtureArchived": "/Users/tongshen/Library/Application Support/Patchouli/backups/stage14-20260909/Stage14 Visual Smoke.md",
+  "installedVersion": "2.0.0+codex.20260910020002"
+}

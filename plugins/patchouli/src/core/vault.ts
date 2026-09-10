@@ -110,6 +110,156 @@ export async function atomicReplaceFile(
   }
 }
 
+export const LEGACY_PATCHOULI_SNIPPET = `/* Patchouli card presentation v2 — scoped to generated cards. */
+.patchouli-card .metadata-container,
+.patchouli-card .inline-title { display: none !important; }
+`;
+
+/** Keep note text portable; theme variables provide contrast in both light and dark themes. */
+export const V21_PATCHOULI_SNIPPET = `/* Patchouli card presentation v2.1 — scoped to generated cards. */
+.patchouli-card .metadata-container,
+.patchouli-card .inline-title { display: none !important; }
+.patchouli-card {
+  --patchouli-rule: var(--background-modifier-border);
+  --patchouli-accent: var(--text-accent);
+}
+.patchouli-card :is(h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.patchouli-card h1 {
+  padding-bottom: .6em;
+  border-bottom: 3px double var(--patchouli-rule);
+}
+/* Section bars: a strong boundary even without color perception. */
+.patchouli-card h2,
+.patchouli-card .cm-line.HyperMD-header-2 {
+  margin-top: 1.8em;
+  margin-bottom: .8em;
+  padding: .45em .7em;
+  border: 1px solid var(--patchouli-rule);
+  border-inline-start: 5px solid var(--patchouli-accent);
+  border-radius: 5px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 1.2em;
+  font-weight: 700;
+}
+.patchouli-card h2[data-heading="Core"] {
+  border-inline-start-width: 7px;
+  background: color-mix(in srgb, var(--patchouli-accent) 10%, var(--background-primary));
+}
+.patchouli-card h2[data-heading="FYI"] {
+  border-style: dashed;
+  border-inline-start: 5px double var(--text-muted);
+}
+/* Concepts: an underline; nested detail: a progressively lighter side rule. */
+.patchouli-card h3,
+.patchouli-card .cm-line.HyperMD-header-3 {
+  margin-top: 1.5em;
+  margin-bottom: .6em;
+  padding-bottom: .3em;
+  border-bottom: 2px solid var(--patchouli-rule);
+  color: var(--text-normal);
+  font-size: 1.1em;
+  font-weight: 650;
+}
+.patchouli-card h4,
+.patchouli-card .cm-line.HyperMD-header-4 {
+  margin-top: 1.2em;
+  padding-inline-start: .65em;
+  border-inline-start: 3px solid var(--patchouli-accent);
+  font-size: 1em;
+}
+.patchouli-card h5,
+.patchouli-card .cm-line.HyperMD-header-5 {
+  margin-top: 1.1em;
+  padding-inline-start: .65em;
+  border-inline-start: 2px dashed var(--text-muted);
+  font-size: 1em;
+}
+.patchouli-card h6,
+.patchouli-card .cm-line.HyperMD-header-6 {
+  margin-top: 1em;
+  padding-inline-start: .65em;
+  border-inline-start: 2px dotted var(--text-muted);
+  font-size: 1em;
+}
+/* Editor spans must inherit the line hierarchy rather than the theme's sizes. */
+.patchouli-card .cm-line :is(.cm-header-2, .cm-header-3, .cm-header-4, .cm-header-5, .cm-header-6) {
+  font-size: inherit;
+  color: var(--text-normal);
+}
+@media print {
+  .patchouli-card h2 { background: transparent; border-color: currentColor; }
+  .patchouli-card :is(h1, h2, h3, h4, h5, h6) { break-after: avoid; }
+}
+`;
+
+export const PATCHOULI_SNIPPET = V21_PATCHOULI_SNIPPET + `
+/* Small title badge: embedded so vaults need no extra image attachments. */
+.patchouli-card h1,
+.patchouli-card .cm-line.HyperMD-header-1 {
+  padding-inline-start: 24px;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAYCAYAAAAlBadpAAAEgUlEQVR42nVUa0yTZxR+3u/7Wtra8tFagQKtFEGKQDapc7qo3RxhmkmMF3Auuok/9IfRLc65H2arzP1Y9muLc1mc2cXEbaHRzGii8xYZ8+68USxyERi0XAuUllv7fe/ZD5yZl51fJyfnec6TnHMeYCoYEQmP8sIdJSW1rwIeAGD4/xABCOQlxl5jvHrpqopK9xsHM1K1JUUvzCtTxfw8Ccn+gVhX5Pk8UyXpm7INZ/t+/4uGztfT/vXrlRPVX9HXb39KdlPBewDggUd6GiotM2dm6RLq7sUFxaX3Lt2hq80t1NNuFxs644pOGKckHh4AgFTU0tNgIaGqL5fmLdh+5kGrcuDQUTTUcwE6PcLhZkxoLRqD3jILAPo8nmdki45pzuj45LDlWGPANN1gmx5K9PAMU5heybMKv1w+eWdAGdkTmxyOVHVUPTu5dtDf9WPwXpVeb4sPKwrSWTLWrVhKb761nOXKls7eyN9t8IIBeAYsETizwmBLEpMzR9UJmHQvsqM/nxM61ROkGopKob2btxd7WwEIjwgekwgMjNKMlDPHkZ+SFB8lJdbMbsR06BoK8ww2ZFidbS+vrq7mNRU10tPTBQBIS124XDbItGNtmTp36Txo9TI2L3qdaeMjfJBn7gKMcyp9lXEAuidkAxCsKfkeLRtjo8lmNjOWQLIuiP72sJA+167aZ8+3Oe8XHcjPndF068rV9Jpa30oiYowxYjKSsret3nuLTTLz6Yu/0sfvvMscRfn4/rsvcbM3AJ1R5larXdBqGG43B5Y0drfV0ZRiLhU7nEX2GUZzQ0OQW9KcwumbV2D238C9bj9Mei31hPupLdgbHYvzj/qVcF0FKkQffCoAiDOgMRqZqUogVUqZpgfXc+hZD6JjY+gdjCDdYmOVC8tGCs2Gs3Wdrf4ACyj/HjUDIJQ73BdGJycLNaIgT4Ak32cf8FiJW7xw6Ah0MYIztxiRkQSarp869f7F8+uIBmKMMYgAKCkRqR8ZDl4JicoJtyVzTWwoIpSuKoc1cyZcK5ZAdtpInpWTSJPTXWP+y9E1O7fXeT0eSQSAvkSiewBomGcvTCNRfCnwsONa7O792VyNk5zjZFqRmKjXIfiHH+GOdrGuv+3wxU3tU3t2w60BIBBRSpx4+8lgffnW4z9tCLQ85EmixDtvNyJwsIZpNKrgdBU4AEjiPpELAJCDHA6AKwlSJVGSAGDf8pUFGz/cJuoGQiQpE7Asmc9SXdkwZmXYrUA2J8KjB/cBADSkCN1dofFD3s93Vm2q3NPd2avKiVHRak8Fd+Uxm1GvGs2qdu2xmYu/7eponvKtigqAMfBYxJGRZZuzZuPaLyLR8fhEexszLlrMVa2ei7GoKskmSrWno3LX7k8AGAUA8Pl8KnHOBtXhH0RX3uaOQEt39EGLlmskAeFhYTIYEmRFESOhXum346dCjT191wHwJ9yBMQYiwkp3afGihQuWnTt25PaWLVu9E0Nhx2A0dqmpqfXw/j/PXAMw9Dw3ZV6vV/hvwWV12XL1lqzHDQIDETEA+AeMO/Wdtz7KmgAAAABJRU5ErkJggg==");
+  background-repeat: no-repeat;
+  background-position: left .2em;
+  background-size: 15px 24px;
+}
+`;
+
+const presentationLocks = new Map<string, Promise<void>>();
+
+/** Install only in an existing Obsidian vault, never change global title/property preferences. */
+export async function ensureCardPresentation(vaultPath: string): Promise<void> {
+  const previous = presentationLocks.get(vaultPath) ?? Promise.resolve();
+  const pending = previous.catch(() => undefined).then(async () => {
+    try {
+      await resolveContainedPath(vaultPath, ".obsidian", { mustExist: true });
+    } catch (error: unknown) {
+      if ((isNodeError(error) && error.code === "ENOENT") || (error instanceof PatchouliError && error.code === "NOT_FOUND")) return;
+      throw error;
+    }
+    const snippets = await ensureContainedDirectory(vaultPath, ".obsidian/snippets");
+    const snippetPath = await resolveContainedPath(vaultPath, ".obsidian/snippets/patchouli-cards-v2.css");
+    let snippet: string | undefined;
+    try { snippet = await fs.readFile(snippetPath, "utf8"); }
+    catch (error: unknown) { if (!isNodeError(error) || error.code !== "ENOENT") throw error; }
+    if (snippet !== undefined && snippet !== PATCHOULI_SNIPPET && snippet !== LEGACY_PATCHOULI_SNIPPET && snippet !== V21_PATCHOULI_SNIPPET) {
+      throw new PatchouliError("COLLISION", "The Patchouli display snippet already contains different content; preserve it and resolve the filename conflict before saving.", { snippetPath });
+    }
+    if (snippet === undefined) await atomicCreateFile(path.join(snippets, "patchouli-cards-v2.css"), PATCHOULI_SNIPPET);
+    else if (snippet === LEGACY_PATCHOULI_SNIPPET || snippet === V21_PATCHOULI_SNIPPET) {
+      if (await fs.readFile(snippetPath, "utf8") !== snippet) throw new PatchouliError("REVISION_CONFLICT", "The display snippet changed during upgrade. Retry to preserve the latest content.");
+      await atomicReplaceFile(snippetPath, PATCHOULI_SNIPPET);
+    }
+    const appearancePath = await resolveContainedPath(vaultPath, ".obsidian/appearance.json");
+    let original: string | undefined;
+    try { original = await fs.readFile(appearancePath, "utf8"); }
+    catch (error: unknown) { if (!isNodeError(error) || error.code !== "ENOENT") throw error; }
+    let appearance: Record<string, unknown>;
+    try {
+      const parsed: unknown = original === undefined ? {} : JSON.parse(original);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("object required");
+      appearance = parsed as Record<string, unknown>;
+      if (appearance.enabledCssSnippets !== undefined && (!Array.isArray(appearance.enabledCssSnippets) || appearance.enabledCssSnippets.some((item: unknown) => typeof item !== "string"))) throw new Error("snippet list required");
+    } catch {
+      throw new PatchouliError("CONFIGURATION_INVALID", "Obsidian appearance.json is invalid; it was not replaced.", { appearancePath });
+    }
+    const enabled = (appearance.enabledCssSnippets ?? []) as string[];
+    if (enabled.includes("patchouli-cards-v2")) return;
+    const contents = `${JSON.stringify({ ...appearance, enabledCssSnippets: [...enabled, "patchouli-cards-v2"] }, null, 2)}\n`;
+    if (original === undefined) await atomicCreateFile(appearancePath, contents);
+    else {
+      if (await fs.readFile(appearancePath, "utf8") !== original) throw new PatchouliError("REVISION_CONFLICT", "Obsidian appearance settings changed. Retry to preserve the latest settings.");
+      await atomicReplaceFile(appearancePath, contents);
+    }
+  });
+  presentationLocks.set(vaultPath, pending);
+  try { await pending; }
+  finally { if (presentationLocks.get(vaultPath) === pending) presentationLocks.delete(vaultPath); }
+}
+
 async function scanDirectory(
   directory: string,
   vaultRoot: string,
@@ -162,6 +312,7 @@ export class VaultCardEngine {
 
   async configureVault(input: { vaultPath: string; cardsDirectory?: string }): Promise<ConfigurationStatus> {
     const status = await this.configurationStore.configure(input);
+    if (status.configuration) await ensureCardPresentation(status.configuration.vaultPath);
     this.#index = new CardIndex([]);
     return status;
   }
@@ -319,12 +470,13 @@ export class VaultCardEngine {
       if (!isNodeError(error) || error.code !== "ENOENT") throw error;
     }
 
+    await ensureCardPresentation(configuration.vaultPath);
     await atomicCreateFile(destinationPath, rendered.markdown, options.atomicOperations);
     const card = parseCard(
       rendered.markdown,
       toPosixRelativePath(configuration.vaultPath, destinationPath),
     );
-    await this.scanCards();
+    this.#index = new CardIndex([]);
     return { card, absolutePath: destinationPath };
   }
 
@@ -365,6 +517,7 @@ export class VaultCardEngine {
       fieldName: "draft.title",
     });
 
+    await ensureCardPresentation(configuration.vaultPath);
     if (!inspection.destination.renamed) {
       await atomicReplaceFile(targetPath, rendered.markdown, options.atomicOperations);
     } else {
@@ -386,7 +539,7 @@ export class VaultCardEngine {
     }
 
     const card = parseCard(rendered.markdown, inspection.destination.cardRef);
-    await this.scanCards();
+    this.#index = new CardIndex([]);
     return {
       card,
       absolutePath: destinationPath,

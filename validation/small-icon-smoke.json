@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0+codex.20260910060342",
+  "dimensions": [
+    15,
+    24
+  ],
+  "testsPassed": 83,
+  "nativeChecks": [
+    "reading title badge visible",
+    "Live Preview title badge visible",
+    "narrow heading wraps without overlap"
+  ],
+  "backup": "/Users/tongshen/Library/Application Support/Patchouli/backups/small-icon-20260910",
+  "legacyCards": "Two known Engineering smoke cards receive cssclasses only",
+  "installedHashesMatch": true
+}

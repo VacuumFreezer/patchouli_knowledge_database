@@ -1,0 +1,126 @@
+{
+  "plugin": "/Users/tongshen/projects/patchouli_knowledge_database/plugins/patchouli",
+  "sessionId": "v2-checkpoint-1788999351081",
+  "generated": {
+    "code": 0,
+    "stderr": ""
+  },
+  "retainedAfterSessionEnd": true,
+  "checkpoints": [
+    {
+      "launchId": "158c7245-05d7-4ea9-a76e-e41c4fc765b7",
+      "checkpointId": "fdf3be58-ff39-4631-88b5-d4e461b75f97",
+      "revision": "974990fd2d77f9a8b24fac88578d70952b7ef0535ef9b5c3e6c02424fbb87713",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:16:51.354Z",
+      "updatedAt": "2026-09-10T00:16:51.354Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "Unicode、UTF-8 与可见字符的区别",
+        "filename": "Unicode、UTF-8 与可见字符的区别.md",
+        "categories": [
+          "计算机基础",
+          "字符编码"
+        ],
+        "summaryMarkdown": "Unicode 规定字符码点，UTF-8 将码点编码为字节。可见字素、码点和字节是不同的计数单位。",
+        "detailMarkdown": "Unicode 为字符分配码点；UTF-8 将一个 Unicode 标量值编码为 1～4 字节。码点是字符的编号，字节是编码后的存储单位。\n\n可见的一个字素可能由多个码点组成，例如通过零宽连接符（ZWJ）组合的 emoji。因此：\n\n$$\n\\text{字素数}\\neq\\text{码点数}\\neq\\text{UTF-8 字节数}\n$$\n\n这些数量在某些文本中可以相等，但不能普遍互换。常见汉字通常占 3 个 UTF-8 字节，部分稀有汉字占 4 字节，不能把所有汉字都视为 3 字节。这些区别适用于文本存储、处理和计数，并非 NLP 特有。",
+        "fyiMarkdown": "| 文本 | Unicode 码点 | UTF-8 十六进制字节 | 字节数 |\n| --- | --- | --- | --- |\n| A | U+0041 | 41 | 1 |\n| 中 | U+4E2D | E4 B8 AD | 3 |\n| 😀 | U+1F600 | F0 9F 98 80 | 4 |\n\n👩‍💻 由女人、ZWJ 和电脑三个码点组成，共占 11 个 UTF-8 字节，但通常显示为一个字素。",
+        "evidence": [
+          {
+            "claim": "对话区分了 Unicode 码点、UTF-8 字节与可见字素，并解释了组合 emoji 和汉字字节长度的例外。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "launchId": "158c7245-05d7-4ea9-a76e-e41c4fc765b7",
+      "checkpointId": "13d65d96-b5fe-48e7-ac88-2652523e48a3",
+      "revision": "945bac8dc1db31275ea8ca0949130a8afdecde4be9f83e0009c51ceb4e98c3cd",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:16:51.354Z",
+      "updatedAt": "2026-09-10T00:16:51.354Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "Byte-level BPE：为什么 token 数不等于字数",
+        "filename": "Byte-level BPE-为什么 token 数不等于字数.md",
+        "categories": [
+          "自然语言处理",
+          "Tokenization"
+        ],
+        "summaryMarkdown": "Byte-level BPE 在字节序列上应用学习到的合并规则。一个 token 可以覆盖多个字符，也可以只覆盖一个字符的部分字节。",
+        "detailMarkdown": "Byte-level BPE 先把文本转换为 UTF-8 字节序列，以 256 种字节值为基础单位。训练阶段根据语料中相邻单位的频率逐步学习合并，形成词表和合并规则；推理阶段使用固定的词表与规则，将文本映射为 token ID。\n\n同一个多语言 tokenizer 的不同语言共享 token ID 空间。切分结果取决于字节序列和已学习的合并规则，而不是直接按汉字、英文单词或可见 emoji 计数。一个 token 可能跨越多个字符，也可能只包含某个字符的一部分 UTF-8 字节。因此，即使知道字数或字节数，也不能直接推出 token 数；应使用对应 tokenizer 实际编码。\n\n还需区分三个量：\n\n- **词表大小 $V$**：token ID 的种类数。\n- **Embedding 维度 $d$**：每个 token 对应向量的维数；嵌入矩阵可表示为 $E\\in\\mathbb{R}^{V\\times d}$。\n- **上下文窗口**：模型一次可处理的 token 序列长度限制。\n\n词表大小不等于向量维度，也不等于上下文窗口。",
+        "fyiMarkdown": "课程以 GPT-5 对应 `o200k_base`、词表约 20 万为例。该映射与规模属于版本相关信息，对话未独立核验；实际使用时应确认具体模型与 tokenizer 的对应关系。",
+        "evidence": [
+          {
+            "claim": "对话解释了字节级 BPE 的基础单位、频率合并、固定规则编码，以及 token 与字符边界不一致的原因。",
+            "sourceReference": "Current Codex conversation"
+          },
+          {
+            "claim": "对话强调词表大小、Embedding 维度和上下文窗口是不同量，并给出了课程中的版本相关示例。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    },
+    {
+      "launchId": "158c7245-05d7-4ea9-a76e-e41c4fc765b7",
+      "checkpointId": "faf2e003-efd5-4e2f-8096-912a5a942da3",
+      "revision": "50ffb52da32bd61da8dad8c4df574586563362a7d82067e28a04667b8e8a1db0",
+      "sequence": 1,
+      "contextDigest": "00dea05bbc3633d0a27165f06e0b3fee7f66f710ce5baddd1b1d5b1ade87a694",
+      "createdAt": "2026-09-10T00:16:51.354Z",
+      "updatedAt": "2026-09-10T00:16:51.354Z",
+      "trigger": "manual",
+      "turnId": "v2-eval-turn",
+      "model": "current",
+      "messageCount": 2,
+      "draft": {
+        "title": "用确定性代码验证文本计数约束",
+        "filename": "用确定性代码验证文本计数约束.md",
+        "categories": [
+          "文本处理",
+          "生成结果验证"
+        ],
+        "summaryMarkdown": "模型按 token 生成文本，不能直接保证单词或字符层面的精确约束。应明确计数规则，并用确定性代码验证。",
+        "detailMarkdown": "生成单位与约束单位可能不同：token-level 生成并不直接保证 word-level 或 character-level 的数量条件，模型自己的计数检查也可能出错。\n\n验证时，先定义单词如何切分、是否忽略大小写，以及统计的是“含目标字符的单词数”还是“目标字符的出现次数”。随后对生成结果执行同一套确定性规则。\n\n设切分后的单词序列为 $W=(w_1,\\ldots,w_n)$，目标字符为 $c$。忽略大小写时，含目标字符的单词数为：\n\n$$\nK=\\sum_{i=1}^{n}\\mathbf{1}\\left[c\\in\\operatorname{lower}(w_i)\\right]\n$$\n\n每个满足条件的单词只计一次，即使该字符在词中重复出现。对要求总词数为 $N$、其中 $M$ 个词含目标字符的任务，应同时验证 $n=N$ 与 $K=M$。\n\nPython 的 `split()` 可实现按空白切分；它验证的是这一切分定义下的词数，不能自动代表所有语言或标点处理规则。",
+        "fyiMarkdown": "练习要求：20 个英文单词，其中 10 个含字母 `s`，忽略大小写。\n\n> Several small birds sang sweet songs beside still streams as a gentle wind carried their cheerful melody through the valley.\n\n```python\nsentence = \"Several small birds sang sweet songs beside still streams as a gentle wind carried their cheerful melody through the valley.\"\nwords = sentence.split()\ncount_s = sum('s' in w.lower() for w in words)\nassert len(words) == 20\nassert count_s == 10\n```\n\n按此规则，句子共 20 个词，前 10 个词均含 `s`，后 10 个词均不含。",
+        "evidence": [
+          {
+            "claim": "对话用英文单词计数练习说明 token 生成与字符约束的差异，并提出用 split 和布尔求和进行确定性检查。",
+            "sourceReference": "Current Codex conversation"
+          }
+        ],
+        "sources": [
+          {
+            "type": "conversation",
+            "label": "当前 Codex 对话"
+          }
+        ],
+        "connections": []
+      }
+    }
+  ]
+}

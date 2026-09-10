@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0+codex.20260910055552",
+  "imagePath": "/Users/tongshen/.codex/plugins/cache/personal/patchouli/2.0.0+codex.20260910055552/assets/patchouli-launch.png",
+  "checks": [
+    "installed launch active",
+    "PNG bytes match source frame",
+    "installed path resolves",
+    "repeated launch retains identity"
+  ],
+  "testSessionOnly": true
+}

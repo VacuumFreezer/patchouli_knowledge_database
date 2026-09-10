@@ -1,9 +1,12 @@
 import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { normalizeCardDraft } from "../core/cards.js";
+import { CaptureStore } from "../core/capture.js";
 import { currentPatchouliSessionId } from "../core/checkpoints.js";
 import { PatchouliError } from "../core/errors.js";
 import { sanitizeTitleToFilename } from "../core/paths.js";
@@ -13,6 +16,8 @@ import type { VaultCardEngine } from "../core/vault.js";
 import type { PendingPreviewStore } from "./pending-previews.js";
 import {
   baseOutputShape,
+  captureInputShape,
+  capturePreviewSchema,
   cardDraftSchema,
   checkpointDraftSchema,
   checkpointReferenceSchema,
@@ -96,7 +101,8 @@ function previewFallbackText(
     `Review Patchouli card “${draft.title}” (${draft.filename}).`,
     `Categories: ${categories}.`,
     `Summary:\n${draft.summaryMarkdown}`,
-    `Detail:\n${draft.detailMarkdown}`,
+    `Core:\n${draft.detailMarkdown}`,
+    `FYI:\n${draft.fyiMarkdown || "None."}`,
     reviewDetails(draft),
     collision.exists
       ? `Collision: ${collision.cardRef} already exists. Edit the title and preview again before saving.`
@@ -134,12 +140,52 @@ async function validateCheckpointReferences(
 }
 
 export function registerPatchouliTools(server: McpServer, context: ToolContext): void {
+  const captures = new CaptureStore(context.engine, context.checkpoints, context.previews.ttlMs);
   const readAnnotations = {
     readOnlyHint: true,
     destructiveHint: false,
     idempotentHint: true,
     openWorldHint: false,
   };
+
+  server.registerTool("preview_capture", {
+    title: "Review connected knowledge cards",
+    description: "Preview the complete concept inventory (new cards and/or updates) and justified peer relationships before any card is written. Use temporary keys for peers, even when neither exists yet. Detail is Core; optional FYI contains examples. Edited groups require a fresh preview before one save-all confirmation.",
+    inputSchema: captureInputShape,
+    outputSchema: { ...baseOutputShape, capturePreview: capturePreviewSchema.optional() },
+    annotations: readAnnotations,
+    _meta: { ui: { resourceUri: REVIEW_RESOURCE_URI }, "openai/outputTemplate": REVIEW_RESOURCE_URI },
+  }, async (input, extra) => safely(async () => {
+    const capturePreview = await captures.preview(input, currentPatchouliSessionId(extra._meta));
+    return success({ capturePreview }, [
+      `Review ${capturePreview.cards.filter(card => card.selected).length} selected concepts together. Nothing has been written.`,
+      ...capturePreview.cards.map(member => [
+        `${member.selected ? "Selected" : "Omitted"} ${member.key}: ${member.draft.title} (${member.cardRef ? "update" : "new"})`,
+        `Concept boundary: ${member.splitReason}`,
+        `Destination: ${member.destinationRef}`,
+        `Categories: ${member.draft.categories.join(", ") || "None."}`,
+        `Summary:\n${member.draft.summaryMarkdown}`,
+        `Core:\n${member.draft.detailMarkdown}`,
+        `FYI:\n${member.draft.fyiMarkdown || "None."}`,
+        reviewDetails(member.resolvedDraft),
+      ].join("\n\n")),
+      `After the user confirms the complete visible group (including “都保存”), call save_capture once with this pendingToken. It saves exactly this review; substantive changes require preview_capture again. Expires ${capturePreview.expiresAt}. Individual writes are atomic; a partial failure reports saved members and the same token resumes safely.`,
+    ].join("\n\n---\n\n"));
+  }));
+
+  server.registerTool("save_capture", {
+    title: "Save or cancel reviewed group",
+    description: "After explicit confirmation, save exactly the whole reviewed capture with one token. No draft edits are accepted here. Identical retries resume partial saves without duplicates. action=cancel invalidates an unused preview without writing cards or consuming checkpoints.",
+    inputSchema: { pendingToken: z.string().min(1).max(128), action: z.enum(["save", "cancel"]).optional() },
+    outputSchema: { ...baseOutputShape, cards: z.array(parsedCardSchema).optional(), cancelled: z.boolean().optional(), idempotentReplay: z.boolean().optional(), retainedCheckpointRefs: z.array(checkpointReferenceSchema).optional(), warnings: z.array(z.string()).optional() },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  }, async ({ pendingToken, action }, extra) => safely(async () => {
+    const { result, idempotentReplay } = await captures.save(pendingToken, currentPatchouliSessionId(extra._meta), action);
+    const cards = result.cards.map(saved => saved.card);
+    return success({ ...result, cards, idempotentReplay }, result.cancelled
+      ? "Capture cancelled. No cards written; checkpoint drafts retained."
+      : `${idempotentReplay ? "Already saved" : "Saved"} ${cards.length} cards: ${cards.map(card => `[[${path.posix.basename(card.cardRef, ".md")}|${card.title}]] (${card.cardRef})`).join(", ")}.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`);
+  }));
 
   server.registerTool(
     "launch_patchouli",
@@ -150,7 +196,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       outputSchema: {
         ...baseOutputShape,
         status: patchouliSessionStatusSchema.optional(),
-        indicator: z.literal("🌿 Patchouli capture active").optional(),
+        indicator: z.literal("Patchouli capture active").optional(),
+        indicatorImagePath: z.string().optional(),
       },
       annotations: {
         readOnlyHint: false,
@@ -160,11 +207,15 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       },
     },
     async (_args, extra) => safely(async () => {
+      const indicatorImagePath = fileURLToPath(new URL("../assets/patchouli-launch.png", import.meta.url));
+      const icon = await readFile(indicatorImagePath);
       const status = await context.checkpoints.launch(currentPatchouliSessionId(extra._meta));
-      return success(
-        { status, indicator: "🌿 Patchouli capture active" },
-        "🌿 Patchouli capture active for this task. Before context compaction, it will preserve private drafts without writing your vault.",
+      const result = success(
+        { status, indicator: "Patchouli capture active", indicatorImagePath },
+        "Patchouli capture active for this task. Display the supplied PNG as the launch indicator. Before context compaction, it will preserve private drafts without writing your vault.",
       );
+      result.content.push({ type: "image", mimeType: "image/png", data: icon.toString("base64") });
+      return result;
     }),
   );
 
@@ -182,7 +233,7 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       return success(
         { status },
         status.active
-          ? `🌿 Patchouli capture is active; ${status.checkpointCount} checkpoint draft(s) are waiting.`
+          ? `Patchouli capture is active; ${status.checkpointCount} checkpoint draft(s) are waiting.`
           : `Patchouli capture is not active; ${status.checkpointCount} checkpoint draft(s) are retained.`,
       );
     }),
@@ -592,7 +643,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
           `New title: “${inspection.draft.title}”. ${collision}`,
           `Categories: ${inspection.draft.categories.join(", ") || "None"}.`,
           `Summary:\n${inspection.draft.summaryMarkdown}`,
-          `Detail:\n${inspection.draft.detailMarkdown}`,
+          `Core:\n${inspection.draft.detailMarkdown}`,
+          `FYI:\n${inspection.draft.fyiMarkdown || "None."}`,
           reviewDetails(inspection.draft),
           `This preview expires at ${pending.expiresAt}. Only after explicit confirmation, call update_card with the pending token and final reviewed draft.`,
         ].join("\n\n"),

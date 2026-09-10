@@ -132,6 +132,7 @@ export function normalizeCardDraft(draft: CardDraft): NormalizedCardDraft {
     categories,
     summaryMarkdown: normalizeMarkdown(draft.summaryMarkdown, "summaryMarkdown"),
     detailMarkdown: normalizeMarkdown(draft.detailMarkdown, "detailMarkdown"),
+    fyiMarkdown: normalizeMarkdown(draft.fyiMarkdown ?? "", "fyiMarkdown", true),
     evidence,
     sources,
     connections,
@@ -186,6 +187,10 @@ export function renderCard(
   const frontmatter = stringify(
     {
       ...(options.frontmatterExtras ?? {}),
+      cssclasses: [...new Set([
+        ...([options.frontmatterExtras?.cssclasses].flat().filter((value): value is string => typeof value === "string")),
+        "patchouli-card",
+      ])],
       id,
       title: normalized.title,
       categories: normalized.categories,
@@ -225,9 +230,13 @@ export function renderCard(
     "",
     normalized.summaryMarkdown,
     "",
-    "## Detail",
+    "## Core",
     "",
     normalized.detailMarkdown,
+    "",
+    "## FYI",
+    "",
+    normalized.fyiMarkdown || "_None._",
     "",
     "## Evidence",
     "",
@@ -288,7 +297,7 @@ export function extractCardUpdatePreservation(markdown: string): {
     }
   }
 
-  const canonical = new Set(["summary", "detail", "evidence", "connections", "sources"]);
+  const canonical = new Set(["summary", "detail", "core", "fyi", "evidence", "connections", "sources"]);
   const lines = split.body.split(/\r?\n/u);
   const kept: string[] = [];
   let collecting = false;
