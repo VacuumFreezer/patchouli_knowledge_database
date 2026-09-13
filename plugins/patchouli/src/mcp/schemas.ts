@@ -46,6 +46,7 @@ export const warningSchema = z.object({
 export const configurationSchema = z.object({
   vaultPath: z.string(),
   cardsDirectory: z.string(),
+  captureFolder: z.string().optional(),
 });
 
 export const configurationStatusSchema = z.object({

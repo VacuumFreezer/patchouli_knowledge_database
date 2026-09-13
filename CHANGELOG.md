@@ -1,5 +1,12 @@
 # Changelog
 
+### 2026-09-13T18:19:06-04:00 — Date/topic filing and Market organization
+
+- Add optional configure_vault captureDate/topic inputs, a validated one-layer captureFolder and dated create destinations. Keep base-directory search and old-card update destinations; preserve pending-preview configuration binding.
+- Update skill capture routing to refresh the user-local date each capture: Sep_13_26 or explicit tokenization_Sep1326. No inferred topic for daily updates. Legacy low-level calls remain compatible when captureDate is omitted.
+- 85 tests, typecheck, repository/canonical validators and bundle checks pass. Installed enabled version 2.0.0+codex.20260913221729; installed daily/topic saves and cross-date retrieval pass.
+- Back up and organize 13 Market cards by created_at in America/New_York: seven Sep_10_26, six Sep_11_26. Verify exact bytes and unique filename links across the vault. Evidence: validation/filing/.
+
 ### 2026-09-10T02:05:11-04:00 — Small conversation and card icons
 
 - Resize the user-supplied frame to transparent 15×24 PNG. Embed it in scoped Obsidian CSS at the title’s left edge in reading/Live Preview; no attachment files or Markdown body changes.

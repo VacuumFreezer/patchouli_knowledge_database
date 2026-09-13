@@ -200,7 +200,7 @@ Start a new Codex task after installation so it loads the newly enabled skill, b
 Configure Patchouli to use /Users/me/Documents/My Vault with cards directly in Engineering.
 ```
 
-An explicitly named folder is the exact destination: this example uses `cardsDirectory: "Engineering"`, and saves cards directly in `Engineering/`. Do not add a `Patchouli` subfolder. The default `Patchouli` directory applies only when no card folder was specified. If the user supplies an absolute folder inside an existing vault, use the actual vault root and that folder's relative path.
+An explicitly named folder is the retrieval base. Before each new capture, the skill configures `captureDate` using the user’s local day (YYYY-MM-DD). With `cardsDirectory: "Engineering"` and `captureDate: "2026-09-13"`, new cards go to `Engineering/Sep_13_26/`. An explicitly supplied `topic: "tokenization"` instead produces `Engineering/tokenization_Sep1326/`. Daily update is not a topic. Do not append a Patchouli subfolder. Search spans the base recursively, and updates retain their existing folder. Low-level callers omitting captureDate retain legacy exact-folder behavior. The resolved captureFolder persists to keep a pending preview stable; the skill refreshes it before the next capture, never between confirmation and save.
 
 Then use either `$patchouli` or a focused natural-language request to capture or query knowledge. A capture always stops for review before the write. Local marketplace installs run from Codex's plugin cache, so reinstall the plugin after changing a packaged source, skill, UI, or distributable.
 
