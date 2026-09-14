@@ -1,9 +1,14 @@
 {
   "mcpServers": {
     "patchouli": {
-      "command": "/bin/sh",
+      "command": "cmd.exe",
       "args": [
-        "./scripts/launch-patchouli-mcp.sh"
+        "/d",
+        "/s",
+        "/c",
+        "call",
+        "./scripts/launch-patchouli-mcp.cmd",
+        "./dist/server.mjs"
       ],
       "cwd": ".",
       "env_vars": [

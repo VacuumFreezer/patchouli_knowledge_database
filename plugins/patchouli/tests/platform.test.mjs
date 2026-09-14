@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { chmod, cp, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, cp, link, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -12,6 +12,7 @@ import { mcpConfiguration, transportOptions } from "../scripts/runtime-config.mj
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mac = { skip: process.platform !== "darwin" };
+const windows = { skip: process.platform !== "win32" };
 const draft = (title = "Mac 知识 🌿") => ({ title, categories: ["Parity"], summaryMarkdown: "A concise summary.", detailMarkdown: "### Formula\n\nThe detail preserves $x^2$ and\n\n$$\nx = \\frac{2}{1}\n$$", evidence: [{ claim: "A paraphrased claim", sourceReference: "Fixture" }], sources: [], connections: [] });
 async function fixture(t) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "patchouli-platform-")));
@@ -23,6 +24,18 @@ async function fixture(t) {
   return { root, vault, engine };
 }
 const code = (expected) => (error) => error?.code === expected;
+async function createFileSymlinkOrSkip(t, target, link) {
+  try {
+    await symlink(target, link);
+    return true;
+  } catch (error) {
+    if (process.platform === "win32" && ["EPERM", "EACCES"].includes(error?.code)) {
+      t.skip("Windows file-symlink privilege is unavailable; junction containment remains covered separately.");
+      return false;
+    }
+    throw error;
+  }
+}
 
 test("Codex request metadata identifies the task and rejects inconsistent identities", () => {
   assert.equal(currentPatchouliSessionId({ threadId: "request-task" }), "request-task");
@@ -82,7 +95,7 @@ test("rejects card symlinks outside the cards directory even inside the vault", 
   const { vault, engine } = await fixture(t);
   await mkdir(path.join(vault, "Patchouli"));
   await writeFile(path.join(vault, "private.md"), "Private note");
-  await symlink(path.join(vault, "private.md"), path.join(vault, "Patchouli", "escape.md"));
+  if (!await createFileSymlinkOrSkip(t, path.join(vault, "private.md"), path.join(vault, "Patchouli", "escape.md"))) return;
   await assert.rejects(engine.getCard("Patchouli/escape.md"), code("PATH_ESCAPE"));
   assert.deepEqual(await engine.scanCards(), []);
 });
@@ -143,6 +156,77 @@ test("checkpoint locks serialize concurrent launches and retain private file per
   const dirs = await readdir(store.root);
   assert.equal((await stat(path.join(store.root, dirs[0], "state.json"))).mode & 0o777, 0o600);
   assert.equal((await stat(path.join(store.root, dirs[0]))).mode & 0o777, 0o700);
+});
+
+test("Windows Node launcher preserves arguments, exit codes and paths with spaces", windows, async (t) => {
+  const { root } = await fixture(t);
+  const nodeAlias = path.join(root, "node & 空格.exe");
+  await link(process.execPath, nodeAlias);
+  const script = path.join(root, "arguments 中文.mjs");
+  await writeFile(script, 'console.log(JSON.stringify(process.argv.slice(2))); process.exitCode=23;');
+  const args = ["two words", "中文🌿", "semi;colon", "single'quote", 'double"quote'];
+  const run = spawnSync("cmd.exe", [
+    "/d", "/s", "/c", "call", path.join(pluginRoot, "scripts/run-with-codex-node.cmd"), script, ...args,
+  ], {
+    encoding: "utf8",
+    windowsHide: true,
+    env: { ...process.env, CODEX_MCP_NODE_PATH: nodeAlias },
+  });
+  assert.equal(run.status, 23, run.stderr);
+  assert.deepEqual(JSON.parse(run.stdout), args);
+});
+
+test("Windows runtime launcher reports missing input and keeps startup errors on stderr", windows, async (t) => {
+  const { root } = await fixture(t);
+  const launcher = path.join(pluginRoot, "scripts/run-with-codex-node.cmd");
+  const missingArgument = spawnSync("cmd.exe", ["/d", "/s", "/c", "call", launcher], {
+    encoding: "utf8", windowsHide: true,
+  });
+  assert.equal(missingArgument.status, 64);
+  assert.equal(missingArgument.stdout, "");
+  assert.match(missingArgument.stderr, /missing script or argument/iu);
+
+  const failed = spawnSync("cmd.exe", [
+    "/d", "/s", "/c", "call", path.join(pluginRoot, "scripts/launch-patchouli-mcp.cmd"), "./dist/server.mjs",
+  ], {
+    cwd: pluginRoot,
+    encoding: "utf8",
+    windowsHide: true,
+    env: { ...process.env, CODEX_MCP_NODE_PATH: process.execPath, PATCHOULI_DATA_ROOT: "relative" },
+  });
+  assert.notEqual(failed.status, 0);
+  assert.equal(failed.stdout, "");
+  assert.match(failed.stderr, /must be an absolute directory/iu);
+});
+
+test("packaged Windows MCP and hooks run from a relocated path without node_modules", windows, async (t) => {
+  const { root } = await fixture(t);
+  const copy = path.join(root, "package 空格", "patchouli");
+  await mkdir(copy, { recursive: true });
+  for (const entry of ["dist", "scripts", "hooks", ".mcp.json"]) await cp(path.join(pluginRoot, entry), path.join(copy, entry), { recursive: true });
+  await assert.rejects(stat(path.join(copy, "node_modules")), code("ENOENT"));
+  const env = {
+    ...process.env,
+    CODEX_MCP_NODE_PATH: process.execPath,
+    PATCHOULI_DATA_ROOT: path.join(root, "state"),
+    PATCHOULI_SESSION_ID: "relocated-windows",
+  };
+  const configuration = JSON.parse(await readFile(path.join(copy, ".mcp.json"), "utf8"));
+  assert.equal(configuration.mcpServers.patchouli.command, "cmd.exe");
+  const transport = new StdioClientTransport(transportOptions(configuration, copy, env));
+  const client = new Client({ name: "windows-relocation-test", version: "1" });
+  try {
+    await client.connect(transport);
+    assert.equal((await client.listTools()).tools.length, 17);
+    assert.equal((await client.callTool({ name: "get_configuration", arguments: {} })).structuredContent.status.configured, false);
+    await client.callTool({ name: "launch_patchouli", arguments: {} });
+  } finally { await client.close(); }
+  const hook = spawnSync("cmd.exe", [
+    "/d", "/s", "/c", "call", path.join(copy, "scripts/launch-patchouli-hook.cmd"), path.join(copy, "dist/hook.mjs"), "session-end",
+  ], { cwd: root, input: JSON.stringify({ session_id: "relocated-windows" }), encoding: "utf8", windowsHide: true, env });
+  assert.equal(hook.status, 0, hook.stderr);
+  assert.equal(hook.stdout, "");
+  assert.equal((await new CheckpointStore({ root: path.join(root, "state/session-checkpoints") }).status("relocated-windows")).active, false);
 });
 
 test("Mac Node launcher preserves arguments, exit codes and paths with spaces", mac, async (t) => {

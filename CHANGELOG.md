@@ -1,5 +1,11 @@
 # Changelog
 
+### 2026-09-13T17:25:25-04:00 — Install and accept v2 on native Windows (Stage 15)
+
+- **Motivation:** The pulled and installed v2 package still contained the Mac `/bin/sh` MCP entry point, and all prior v2 installed/native acceptance evidence came from Mac.
+- **Changes:** Build the distribution for `win32`, split privileged file-symlink fixtures from their portable presentation assertions, add native Windows launcher/relocated-package tests, and add a reproducible installed-copy acceptance harness. Update the single cachebuster to `2.0.0+codex.20260913211226` and reinstall from the existing local `personal` marketplace.
+- **Validation:** 88 tests complete with 78 passes, 0 failures and 10 explained skips (seven Mac-only; three unavailable Windows file-symlink privileges). Typecheck, plugin/skill validators, bundle, 17-tool MCP and real Hook pass. All 75 installed files match source. Deterministic installed capture/update/checkpoint/conflict/search checks, an actual fresh Codex launch/status task, and isolated native Obsidian Core/FYI/math/link/backlink checks pass; temporary state was removed and no real vault was read or changed. See `validation/windows/acceptance.md`.
+
 ### 2026-09-10T02:05:11-04:00 — Small conversation and card icons
 
 - Resize the user-supplied frame to transparent 15×24 PNG. Embed it in scoped Obsidian CSS at the title’s left edge in reading/Live Preview; no attachment files or Markdown body changes.

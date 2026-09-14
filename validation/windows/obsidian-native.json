@@ -1,0 +1,26 @@
+{
+  "application": "Obsidian",
+  "version": "1.5.3",
+  "platform": "Windows 11 x64",
+  "profile": "isolated temporary user-data-dir",
+  "vault": "isolated synthetic Stage 15 vault",
+  "checks": {
+    "markdownFilesLoaded": 2,
+    "singleVisibleH1": true,
+    "summaryCoreFyiRendered": true,
+    "chineseEmojiCodeRendered": true,
+    "mathNodes": 8,
+    "propertiesHiddenForPatchouliCard": true,
+    "inlineTitleHiddenForPatchouliCard": true,
+    "outgoingInternalLinkResolved": true,
+    "backlinkCount": 1,
+    "backlinkSource": "Windows Acceptance/Windows Tokenization.md",
+    "target": "Windows Acceptance/Windows Unicode 字符.md"
+  },
+  "cleanup": {
+    "isolatedProcessesStopped": 5,
+    "remainingProcesses": 0,
+    "temporaryProfileAndVaultRemoved": true,
+    "realVaultReadOrModified": false
+  }
+}

@@ -7,6 +7,19 @@ import { VaultCardEngine, normalizeCardDraft, renderCard, parseCard, extractCard
 
 const draft = (extra = {}) => ({ title: '字符编码', categories: ['基础'], summaryMarkdown: '字符与字节不同。', detailMarkdown: '### 机制\n\nUnicode assigns code points; UTF-8 encodes them. $n=4$\n\n```python\nlen("😀".encode("utf-8"))\n```', evidence: [], sources: [], connections: [], ...extra });
 
+async function createFileSymlinkOrSkip(t, target, link) {
+  try {
+    await symlink(target, link);
+    return true;
+  } catch (error) {
+    if (process.platform === 'win32' && ['EPERM', 'EACCES'].includes(error?.code)) {
+      t.skip('Windows file-symlink privilege is unavailable; junction containment remains covered separately.');
+      return false;
+    }
+    throw error;
+  }
+}
+
 test('owned v2 presentation upgrades once without rewriting cards or appearance preferences', async t => {
   const root = await mkdtemp(path.join(tmpdir(), 'patchouli-style-upgrade-'));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -26,7 +39,7 @@ test('owned v2 presentation upgrades once without rewriting cards or appearance 
   assert.equal(await readFile(css, 'utf8'), PATCHOULI_SNIPPET);
 });
 
-test('presentation upgrade preserves customized snippets and rejects snippet symlink escapes', async t => {
+test('presentation upgrade preserves customized snippets', async t => {
   const root = await mkdtemp(path.join(tmpdir(), 'patchouli-style-custom-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const vault = path.join(root, 'vault');
@@ -36,10 +49,17 @@ test('presentation upgrade preserves customized snippets and rejects snippet sym
   await writeFile(css, custom);
   await assert.rejects(ensureCardPresentation(vault), { code: 'COLLISION' });
   assert.equal(await readFile(css, 'utf8'), custom);
-  await rm(css);
+});
+
+test('presentation rejects snippet symlink escapes when the host permits file symlinks', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'patchouli-style-symlink-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const vault = path.join(root, 'vault');
+  await mkdir(path.join(vault, '.obsidian/snippets'), { recursive: true });
+  const css = path.join(vault, '.obsidian/snippets/patchouli-cards-v2.css');
   const outside = path.join(root, 'outside.css');
   await writeFile(outside, LEGACY_PATCHOULI_SNIPPET);
-  await symlink(outside, css);
+  if (!await createFileSymlinkOrSkip(t, outside, css)) return;
   await assert.rejects(ensureCardPresentation(vault), { code: 'PATH_ESCAPE' });
   assert.equal(await readFile(outside, 'utf8'), LEGACY_PATCHOULI_SNIPPET);
 });
@@ -87,9 +107,20 @@ test('presentation is scoped, settings preserved, FYI searchable, and legacy exi
   await writeFile(appearance, '{ invalid user config');
   await assert.rejects(engine.writeCard(draft({ title: 'Other' })), { code: 'CONFIGURATION_INVALID' });
   assert.equal(await readFile(appearance, 'utf8'), '{ invalid user config');
-  await rm(appearance);
-  await symlink(path.join(root, 'outside.json'), appearance);
-  await writeFile(path.join(root, 'outside.json'), '{}');
+});
+
+test('presentation rejects appearance symlink escapes when the host permits file symlinks', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'patchouli-appearance-symlink-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const vault = path.join(root, 'vault');
+  await mkdir(path.join(vault, '.obsidian'), { recursive: true });
+  const appearance = path.join(vault, '.obsidian/appearance.json');
+  const outside = path.join(root, 'outside.json');
+  await writeFile(outside, '{}');
+  if (!await createFileSymlinkOrSkip(t, outside, appearance)) return;
+  const config = path.join(root, 'configuration.json');
+  await writeFile(config, JSON.stringify({ vaultPath: vault, cardsDirectory: 'NLP' }));
+  const engine = new VaultCardEngine({ configurationPath: config });
   await assert.rejects(engine.writeCard(draft({ title: 'Escape' })), { code: 'PATH_ESCAPE' });
-  assert.equal(await readFile(path.join(root, 'outside.json'), 'utf8'), '{}');
+  assert.equal(await readFile(outside, 'utf8'), '{}');
 });

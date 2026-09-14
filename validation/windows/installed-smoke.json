@@ -1,0 +1,24 @@
+{
+  "platform": "win32",
+  "architecture": "x64",
+  "node": "v24.19.0",
+  "mcpCommand": "cmd.exe",
+  "toolCount": 17,
+  "configuredCardsDirectory": "Windows Acceptance",
+  "previewCardCount": 2,
+  "cardsBeforeConfirmation": 0,
+  "savedCardCount": 2,
+  "idempotentReplay": true,
+  "checkpointCountAfterCompact": 1,
+  "sessionEndRetainedCheckpoint": true,
+  "checkpointCountAfterUpdate": 0,
+  "updatePreservedId": true,
+  "revisionConflictProtectedManualEdit": true,
+  "searchResultCount": 2,
+  "presentationProvisioned": true,
+  "cards": [
+    "Windows Tokenization.md",
+    "Windows Unicode 字符.md"
+  ],
+  "fixture": "Synthetic isolated temporary vault; removed after native Obsidian inspection."
+}

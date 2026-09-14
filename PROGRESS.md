@@ -1,6 +1,6 @@
 # Patchouli development progress
 
-Last updated: 2026-09-10T01:56:35-04:00
+Last updated: 2026-09-13T17:25:25-04:00
 
 ## How this tracker is used
 
@@ -30,6 +30,7 @@ Last updated: 2026-09-10T01:56:35-04:00
 | 12. v2 capture workflow and acceptance | Teach capture/checkpoints to separate reusable concepts, verify actual model behavior, and pass full compatibility checks. | Complete | 2026-09-09 | 2026-09-09 |
 | 13. v2 installation and final smoke test | Install the accepted package and verify the complete workflow in fresh Codex and native Obsidian. | Complete | 2026-09-09 | 2026-09-09 |
 | 14. Card visual hierarchy | Make card sections and subheadings clearly distinguishable in Obsidian, then validate and install the scoped presentation update. | Complete | 2026-09-09 | 2026-09-09 |
+| 15. Windows v2 installation and native acceptance | Build the v2 package for Windows, close native regression gaps, install it through the supported cachebuster flow, and verify the installed Codex/Obsidian workflow. | Complete | 2026-09-13T17:02:49-04:00 | 2026-09-13T17:25:25-04:00 |
 
 ## Active cross-stage revision
 
@@ -494,9 +495,29 @@ Paths in this inventory are relative to `plugins/patchouli` unless otherwise sta
 
 **Evidence:** `validation/visual-hierarchy/acceptance.md`, `baseline.json`, `accepted-sha256.json`, `installed-smoke.json` and `final-checks.json`. 83 regression tests, typecheck, both validator families, bundle/MCP and real isolated hook passed. Installed version `2.0.0+codex.20260910020002` is enabled; 71 installed hashes match. Native Obsidian light/dark, narrow/wide, reading/Live Preview, formula/table/link/backlink and ordinary-note checks pass. Original NLP/Welcome/appearance hashes unchanged; fixture archived, original theme/sidebars restored. Core/FYI-specific accents apply in reading view; general heading hierarchy applies in both views.
 
+## Stage 15 — Windows v2 installation and native acceptance
+
+**Status:** Complete — started 2026-09-13T17:02:49-04:00; completed 2026-09-13T17:25:25-04:00.
+
+**Goal:** Produce and install a Windows-targeted Patchouli v2 package, prove that the current shared feature set works through the installed Windows launchers and Codex host, and record native Windows acceptance without modifying a real knowledge vault.
+
+### Planned implementation and checks
+
+- [x] Preserve the completed Mac artifacts and shared v2 behavior while generating `.mcp.json` for `win32`; do not install the committed Mac `/bin/sh` entry point on Windows.
+- [x] Make the native Windows regression gate reliable: distinguish unavailable file-symlink privileges from product failures, retain junction/path-containment coverage, and harden or characterize transient Windows atomic-replacement errors without weakening revision or collision safety.
+- [x] Run type checking, a fresh Windows build, the complete regression suite, plugin/skill validators, self-contained bundle verification, 17-tool MCP initialization, and a real isolated PreCompact Hook smoke. Record every skip and retry.
+- [x] Validate the configured local marketplace name and source, update only the plugin manifest cachebuster with the helper's exact validation/versioning rules, reinstall `patchouli@personal`, and compare installed launch/configuration/runtime/skill hashes with the accepted Windows artifacts.
+- [x] In a fresh Windows Codex task or equivalent installed-host client, verify configuration isolation, 17 tools, explicit launch/status, checkpoint/SessionEnd retention, group preview/save/idempotent replay, reviewed update/conflict behavior, search/read inquiry, and no writes before confirmation.
+- [x] Use an isolated disposable Obsidian vault to verify scoped presentation provisioning, Core/FYI, Chinese/emoji/code/math, selected wikilinks and derived backlinks. Do not read, reconfigure, or mutate the user's existing vault.
+- [x] Restore temporary state, remove only disposable fixtures, update README/CHANGELOG and a Windows acceptance report with versions, hashes, commands, results and limits, then mark the stage Complete only when the installed Windows package passes the required gate.
+
+**Exit criterion:** The installed/enabled Windows package uses the Windows MCP launcher, all required native regression and installed-host workflows pass, an isolated Windows Obsidian vault renders and links v2 cards correctly, no real vault is touched, and reproducible evidence identifies the accepted source and installed artifacts.
+
+**Evidence:** `validation/windows/acceptance.md`, `accepted-sha256.json`, `installed.json`, `installed-smoke.json` and `obsidian-native.json`. The native Windows suite completed 88 tests with 78 passes, zero failures and ten explained platform/privilege skips. Typecheck, validators, self-contained bundle, 17-tool MCP and real Hook pass. Installed/enabled version `2.0.0+codex.20260913211226` uses `cmd.exe`; all 75 installed files match source. Deterministic installed capture/update/checkpoint/conflict/search checks, actual fresh-host launch/status and isolated native Obsidian Core/FYI/math/link/backlink checks pass. All disposable state was removed; no real vault was read or modified.
+
 ## Current next action
 
-Stage 14 is complete; no active development stage remains. The visual update is installed and applied to the user vault. Use a new Codex task for the updated plugin runtime; existing cards already display the new styling. Acceptance and limits are in `validation/visual-hierarchy/acceptance.md`. Stages 1–13 remain complete.
+Stage 15 is complete. Windows users should start a new Codex task so it loads installed version `2.0.0+codex.20260913211226`; the current source artifact is Windows-targeted and must be rebuilt on Mac before a future Mac reinstall. No active development stage remains.
 
 ### Previous completed follow-up
 

@@ -224,11 +224,13 @@ The visible `🌿` acknowledgement means future pre-compaction checkpoints are a
 - Automated Obsidian CLI checks require the Obsidian 1.12.7-or-newer installer and the CLI option enabled. Older desktop builds can still read Patchouli cards, but vault registration and visual checks use the Obsidian UI.
 - When a host does not render the inline MCP App, Patchouli presents the same editable draft conversationally and still requires explicit confirmation.
 
-## Additional Mac verification
+## Additional platform verification
 
 `pnpm test` includes platform tests and a fixed card/search/wikilink baseline from the committed Windows distribution. Native Windows testing is separate from checking Windows branches on a Mac. To exercise another mounted filesystem, run the suite with `TMPDIR` pointing to a disposable directory on that volume.
 
 For interactive review verification, run `node plugins/patchouli/scripts/inspect-review.mjs` and open the printed localhost URL. The harness uses the real MCP server, a temporary vault and synthetic cards, and retains that fixture directory for Obsidian inspection. Stop the process and remove its printed temporary root when finished. Set `PATCHOULI_SMOKE_PLUGIN_ROOT` to test an installed package with the smoke scripts or review harness.
+
+Native Windows v2 acceptance is recorded in `validation/windows/acceptance.md`. The Windows build, 17-tool MCP, real Hook synthesis, installed group capture/update/checkpoint workflow, fresh Codex host activation and isolated native Obsidian rendering/link/backlink checks pass for `2.0.0+codex.20260913211226`. On Windows hosts without Developer Mode or elevated file-symlink privilege, the three file-symlink escape fixtures report explicit skips; directory-junction escape coverage still runs and passes. Always run `pnpm build` on the target platform before reinstalling, because a `.mcp.json` generated on Mac cannot start the Windows MCP server.
 
 ## Development governance
 

@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0+codex.20260913211226",
+  "root": "D:\\Codex\\home\\plugins\\cache\\personal\\patchouli\\2.0.0+codex.20260913211226",
+  "marketplace": "personal",
+  "source": "D:\\Codex\\workspaces\\patchouli_knowledge_database\\plugins\\patchouli",
+  "installed": true,
+  "enabled": true,
+  "mcpCommand": "cmd.exe",
+  "sourceFiles": 75,
+  "installedFiles": 75,
+  "hashMismatches": 0,
+  "installedMcpSmoke": "17 tools passed",
+  "installedRealHookSmoke": "1 private draft; no vault configured or written",
+  "freshCodexHost": {
+    "taskId": "01a09ca2-4a5e-7861-959d-3a4644498d5e",
+    "ephemeral": true,
+    "captureActive": true,
+    "checkpointCount": 0,
+    "indicatorImagePath": "D:\\Codex\\home\\plugins\\cache\\personal\\patchouli\\2.0.0+codex.20260913211226\\assets\\patchouli-launch.png",
+    "vaultConfigured": false,
+    "cardsWritten": 0
+  }
+}

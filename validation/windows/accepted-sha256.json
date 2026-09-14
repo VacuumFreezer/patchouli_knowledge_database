@@ -1,0 +1,29 @@
+{
+  "acceptedAt": "2026-09-13T21:24:54.1576185Z",
+  "baseRevision": "70a52f6964d628036c0fc2b1f437ad47377f8894",
+  "platform": "win32",
+  "architecture": "x64",
+  "os": "Microsoft Windows 11 Home Chinese",
+  "osVersion": "10.0.26200",
+  "node": "v24.19.0",
+  "pnpm": "11.19.0",
+  "codex": "0.154.0-alpha.6.2",
+  "obsidian": "1.5.3",
+  "version": "2.0.0+codex.20260913211226",
+  "files": {
+    "plugins/patchouli/.codex-plugin/plugin.json": "584267380c318da88e7355c17784942fb71d25679f2b4ee8b26bc5ae2df67e71",
+    "plugins/patchouli/.mcp.json": "170fb33b8a0cb3072701e093cab176bf3054c0a08743401cc8df07dcb4c891df",
+    "plugins/patchouli/dist/core.mjs": "b37756fc074e6c29400f939737e377730d94edfff8d25f87e9483b0cab334315",
+    "plugins/patchouli/dist/hook.mjs": "4bbddde64c62b321bf0e133e1624c66a3761c6ca3e2337b67a812b4d19b3bd8d",
+    "plugins/patchouli/dist/review-app.html": "75c20c38b89af4263bd3b31af5ae0b41c6174db5c774bb6d7e349cc789311e14",
+    "plugins/patchouli/dist/server.mjs": "c33717d422e3f0d6ec9f5703d0210adcaeb0487e895f317181f09691d35e1b19",
+    "plugins/patchouli/hooks/hooks.json": "96f1f3d40837a0aaa5b80253ffa2a0cfe3c68696261ba4016544620b376c69fc",
+    "plugins/patchouli/scripts/run-with-codex-node.cmd": "c5e1ff4c86e9a6d7ad72e4b37ab2477df852876c7a24165c245cbe5962ea878b",
+    "plugins/patchouli/scripts/launch-patchouli-mcp.cmd": "0bf1f4aa2ed4dbb82543936ec7345d1293081a6ec368c2ed6d6119976b20bf11",
+    "plugins/patchouli/scripts/launch-patchouli-hook.cmd": "e87d9fdf7235a9accf934a27d6e3accfdb4b837f57ab9af2b96ebf371e7d7a01",
+    "plugins/patchouli/skills/patchouli/SKILL.md": "022862bd9b0936fdf1f6b61e936bfac7a422cf3aecfb7c9e3e921cd4ac4f70c7",
+    "plugins/patchouli/tests/platform.test.mjs": "a667776a512f3dee63ee5dfae50af4198bc644247f47790927170f59ee527a81",
+    "plugins/patchouli/tests/v2-format.test.mjs": "210321d139d8238797f210e0b8e9193c8db296f855e84ea5a6f55e877a2e64a7",
+    "validation/windows/installed-smoke.mjs": "111853c4798cd23145b7e1b986f5bb29f52425269eb78baec6b42c8f71f8fe99"
+  }
+}
