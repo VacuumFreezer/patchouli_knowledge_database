@@ -3,6 +3,7 @@ export const DEFAULT_CARDS_DIRECTORY = "Patchouli";
 export interface VaultConfiguration {
   vaultPath: string;
   cardsDirectory: string;
+  captureFolder?: string;
 }
 
 export interface ConfigurationWarning {

@@ -534,3 +534,7 @@ Replaced the launch leaf with frame 0 of the user-supplied APNG. The packaged tr
 ### Completed small-icon follow-up — 2026-09-10T02:05:11-04:00
 
 Conversation icon resized to 15×24; all new marked cards show an embedded title badge in native reading/editing views. Installed and applied `2.0.0+codex.20260910060342`; backed up and tagged two legacy Engineering test cards. 83 tests and native visual smoke pass. Evidence: `validation/small-icon-smoke.json`.
+
+### Completed date/topic filing follow-up — 2026-09-13T18:19:06-04:00
+
+Implemented optional captureDate/topic runtime routing and automatic skill configuration before each capture. One layer: Sep_13_26 or tokenization_Sep1326. Search remains at the base; old-card updates stay put; previews bind to configured destinations. Installed 2.0.0+codex.20260913221729; 85 tests and installed filing smoke pass. Market’s 13 cards moved with unchanged hashes and working unique-name links to Sep_10_26 (7) and Sep_11_26 (6), backed up under Application Support/Patchouli/backups/market-filing-20260913. Evidence: validation/filing/.

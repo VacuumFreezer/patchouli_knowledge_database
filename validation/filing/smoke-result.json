@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0+codex.20260913221729",
+  "checks": [
+    "installed daily preview/save",
+    "installed topic preview/save",
+    "prior-day read after date change",
+    "13 moved Market cards readable",
+    "Market Delta search"
+  ],
+  "groups": {
+    "Sep_10_26": 7,
+    "Sep_11_26": 6
+  }
+}

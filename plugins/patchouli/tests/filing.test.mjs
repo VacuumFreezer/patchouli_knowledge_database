@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, rm, readdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { VaultCardEngine, captureFolderForDate } from '../dist/core.mjs';
+const draft = title => ({title,categories:[],summaryMarkdown:'Daily learning',detailMarkdown:'A durable concept.',evidence:[],sources:[],connections:[]});
+test('date and explicit topic folders use one safe calendar layer', () => {
+ assert.equal(captureFolderForDate('2026-09-13'),'Sep_13_26');
+ assert.equal(captureFolderForDate('2026-09-13','tokenization'),'tokenization_Sep1326');
+ assert.equal(captureFolderForDate('2028-02-29','中文 topic'),'中文 topic_Feb2928');
+ for(const date of ['2026-02-29','2026-13-01','bad']) assert.throws(()=>captureFolderForDate(date));
+ for(const topic of ['../escape','a/b','a\\b','CON','']) assert.throws(()=>captureFolderForDate('2026-09-13',topic));
+});
+test('dated create keeps cross-date search/read/update and preview has no directory side effects', async t => {
+ const root=await mkdtemp(path.join(tmpdir(),'patchouli-filing-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const vault=path.join(root,'vault');await mkdir(vault);
+ const engine=new VaultCardEngine({configurationPath:path.join(root,'config.json')});
+ await engine.configureVault({vaultPath:vault,cardsDirectory:'Market',captureDate:'2026-09-10'});
+ const old=await engine.writeCard(draft('Old concept'));
+ await engine.configureVault({vaultPath:vault,cardsDirectory:'Market',captureDate:'2026-09-13',topic:'tokenization'});
+ assert.equal((await engine.inspectDraft(draft('New concept'))).collision.cardRef,'Market/tokenization_Sep1326/New concept.md');
+ assert.deepEqual(await readdir(path.join(vault,'Market')),['Sep_10_26']);
+ const fresh=await engine.writeCard(draft('New concept'));
+ assert.equal(fresh.card.cardRef,'Market/tokenization_Sep1326/New concept.md');
+ assert.equal((await engine.searchCards('concept')).length,2);
+ const target=await engine.getCard(old.card.cardRef);
+ const updated=await engine.updateCard(target.cardRef,target.revision,{...draft('Old concept'),detailMarkdown:'Updated knowledge.'});
+ assert.equal(updated.card.cardRef,target.cardRef);
+ assert.equal(updated.card.id,target.id);
+ const reopened=new VaultCardEngine({configurationPath:path.join(root,'config.json')});
+ assert.equal((await reopened.inspectDraft(draft('Next'))).collision.cardRef,'Market/tokenization_Sep1326/Next.md');
+});

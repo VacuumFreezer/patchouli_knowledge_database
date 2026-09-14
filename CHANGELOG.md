@@ -1,5 +1,12 @@
 # Changelog
 
+### 2026-09-13T18:19:06-04:00 — Date/topic filing and Market organization
+
+- Add optional configure_vault captureDate/topic inputs, a validated one-layer captureFolder and dated create destinations. Keep base-directory search and old-card update destinations; preserve pending-preview configuration binding.
+- Update skill capture routing to refresh the user-local date each capture: Sep_13_26 or explicit tokenization_Sep1326. No inferred topic for daily updates. Legacy low-level calls remain compatible when captureDate is omitted.
+- 85 tests, typecheck, repository/canonical validators and bundle checks pass. Installed enabled version 2.0.0+codex.20260913221729; installed daily/topic saves and cross-date retrieval pass.
+- Back up and organize 13 Market cards by created_at in America/New_York: seven Sep_10_26, six Sep_11_26. Verify exact bytes and unique filename links across the vault. Evidence: validation/filing/.
+
 ### 2026-09-13T17:25:25-04:00 — Install and accept v2 on native Windows (Stage 15)
 
 - **Motivation:** The pulled and installed v2 package still contained the Mac `/bin/sh` MCP entry point, and all prior v2 installed/native acceptance evidence came from Mac.

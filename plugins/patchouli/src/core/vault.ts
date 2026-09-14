@@ -8,7 +8,7 @@ import {
   parseCard,
   renderCard,
 } from "./cards.js";
-import { ConfigurationStore } from "./configuration.js";
+import { ConfigurationStore, type ConfigureVaultInput } from "./configuration.js";
 import { PatchouliError, isNodeError } from "./errors.js";
 import {
   ensureContainedDirectory,
@@ -310,7 +310,7 @@ export class VaultCardEngine {
     return this.configurationStore.getStatus();
   }
 
-  async configureVault(input: { vaultPath: string; cardsDirectory?: string }): Promise<ConfigurationStatus> {
+  async configureVault(input: ConfigureVaultInput): Promise<ConfigurationStatus> {
     const status = await this.configurationStore.configure(input);
     if (status.configuration) await ensureCardPresentation(status.configuration.vaultPath);
     this.#index = new CardIndex([]);
@@ -379,7 +379,7 @@ export class VaultCardEngine {
   async inspectDraft(draft: CardDraft): Promise<DraftInspection> {
     const configuration = await this.configurationStore.requireConfiguration();
     const normalizedDraft = normalizeCardDraft(draft);
-    const cardRef = [configuration.cardsDirectory, normalizedDraft.filename].join("/");
+    const cardRef = [configuration.cardsDirectory, configuration.captureFolder, normalizedDraft.filename].filter(Boolean).join("/");
     const destinationPath = await resolveContainedPath(configuration.vaultPath, cardRef, {
       fieldName: "draft.title",
     });
@@ -450,7 +450,7 @@ export class VaultCardEngine {
     const configuration: VaultConfiguration = await this.configurationStore.requireConfiguration();
     const cardsDirectory = await ensureContainedDirectory(
       configuration.vaultPath,
-      configuration.cardsDirectory,
+      [configuration.cardsDirectory, configuration.captureFolder].filter(Boolean).join("/"),
     );
     const rendered = renderCard(draft, { id: options.id, createdAt: options.createdAt });
     const destinationPath = path.join(cardsDirectory, rendered.draft.filename);

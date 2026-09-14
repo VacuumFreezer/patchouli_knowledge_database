@@ -11,6 +11,28 @@ import {
   type VaultConfiguration,
 } from "./types.js";
 
+export interface ConfigureVaultInput {
+  vaultPath: string;
+  cardsDirectory?: string;
+  captureDate?: string;
+  topic?: string;
+}
+
+/** Explicit local calendar date keeps previews stable across midnight and time zones. */
+export function captureFolderForDate(date: string, topic?: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) {
+    throw new PatchouliError("VALIDATION_ERROR", "captureDate must be a valid local calendar date (YYYY-MM-DD).");
+  }
+  const [year, month, day] = date.split("-") as [string, string, string];
+  const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(month) - 1];
+  if (topic !== undefined) {
+    const name = normalizeRelativePath(topic, "topic");
+    if (name.includes("/") || /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i.test(name)) throw new PatchouliError("VALIDATION_ERROR", "topic must be one safe folder name.");
+    return `${name}_${mon}${day}${year.slice(-2)}`;
+  }
+  return `${mon}_${day}_${year.slice(-2)}`;
+}
+
 async function validateCardsDirectory(vaultPath: string, cardsDirectory: string): Promise<void> {
   const resolved = await resolveContainedPath(vaultPath, cardsDirectory, {
     fieldName: "cardsDirectory",
@@ -70,7 +92,7 @@ export class ConfigurationStore {
     this.configurationPath = path.resolve(configurationPath);
   }
 
-  async configure(input: { vaultPath: string; cardsDirectory?: string }): Promise<ConfigurationStatus> {
+  async configure(input: ConfigureVaultInput): Promise<ConfigurationStatus> {
     const validatedVault = await validateVaultDirectory(input.vaultPath);
     const cardsDirectory = normalizeRelativePath(
       input.cardsDirectory ?? DEFAULT_CARDS_DIRECTORY,
@@ -78,9 +100,12 @@ export class ConfigurationStore {
     );
     await validateCardsDirectory(validatedVault.vaultPath, cardsDirectory);
 
+    if (input.topic !== undefined && input.captureDate === undefined) throw new PatchouliError("VALIDATION_ERROR", "topic requires captureDate.");
+    const captureFolder = input.captureDate === undefined ? undefined : captureFolderForDate(input.captureDate, input.topic);
     const configuration: VaultConfiguration = {
       vaultPath: validatedVault.vaultPath,
       cardsDirectory,
+      ...(captureFolder ? { captureFolder } : {}),
     };
     await writeJsonAtomically(this.configurationPath, configuration);
     return {
@@ -128,11 +153,14 @@ export class ConfigurationStore {
     const validatedVault = await validateVaultDirectory(stored.vaultPath);
     const cardsDirectory = normalizeRelativePath(stored.cardsDirectory, "cardsDirectory");
     await validateCardsDirectory(validatedVault.vaultPath, cardsDirectory);
+    const captureFolder = "captureFolder" in stored ? normalizeRelativePath(stored.captureFolder as string, "captureFolder") : undefined;
+    if (captureFolder?.includes("/")) throw new PatchouliError("CONFIGURATION_INVALID", "captureFolder must be one directory layer.");
     return {
       configured: true,
       configuration: {
         vaultPath: validatedVault.vaultPath,
         cardsDirectory,
+        ...(captureFolder ? { captureFolder } : {}),
       },
       warnings: validatedVault.warnings,
     };

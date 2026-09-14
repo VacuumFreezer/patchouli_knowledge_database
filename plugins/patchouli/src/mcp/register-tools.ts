@@ -335,6 +335,8 @@ export function registerPatchouliTools(server: McpServer, context: ToolContext):
       inputSchema: {
         vaultPath: z.string().trim().min(1),
         cardsDirectory: z.string().trim().min(1).optional(),
+        captureDate: z.string().optional().describe("Local calendar date YYYY-MM-DD for new cards; refresh before each capture. Keeps search across the base directory."),
+        topic: z.string().trim().min(1).optional().describe("Only an explicitly user-named topic; requires captureDate."),
       },
       outputSchema: {
         ...baseOutputShape,
