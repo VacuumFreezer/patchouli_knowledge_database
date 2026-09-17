@@ -4,3 +4,5 @@ coverage/
 plugins/patchouli/dist/*.map
 plugins/patchouli/dist/meta.json
 *.log
+
+.patchouli-install.lock

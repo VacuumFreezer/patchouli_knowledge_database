@@ -1,5 +1,18 @@
 # Changelog
 
+### 2026-09-16T23:37:02-04:00 — Cross-platform sync/install command
+
+- Add scripts/sync-install.mjs for PowerShell and Terminal, with clean-tree fast-forward synchronization and --no-pull for a reviewed local checkout. Re-execute the updated script after pull.
+- Detect Windows/macOS, force native build, run tests/validators/MCP before installation, use official marketplace/cachebuster helpers, reject marketplace collisions and confirm enabled version plus installed MCP/runtime before printing bilingual SUCCESS.
+- Back up/restore tracked generated files on success and handled failure, retain recovery backup on failure, and serialize installation with an ignored lock. Keep manual Mac/Windows installation documented.
+- Real Mac installation succeeds as 2.0.0+codex.20260917033500; 90 tests pass, four Windows-native tests skip, zero failures. Windows command construction/restoration/error checks added; native Windows end-to-end remains to run on Windows. Evidence: validation/sync-install/.
+
+### 2026-09-16T23:24:49-04:00 — Restore Mac MCP startup after Windows artifact installation
+
+- Reproduced installed 2.0.0+codex.20260913211226 failure: spawn cmd.exe ENOENT. Git cec33ac changed the checked-in .mcp.json to the Windows target; the Mac installed that configuration. No evidence that an app update caused this failure.
+- Rebuild for darwin and reinstall 2.0.0+codex.20260917032345 using the supported cachebuster flow. Document that source synchronization/reinstall alone does not select the local OS. No knowledge cards, task checkpoints or trust settings changed.
+- 87 tests pass; three Windows-native tests skipped on Mac. Typecheck, manifest and bundle validation, installed 17-tool enumeration, isolated launch/status/icon checks pass. Evidence: validation/mac-launch-repair/result.json. Existing task tool refresh still depends on the host; no claim that the referenced task has been relaunched.
+
 ### 2026-09-13T18:19:06-04:00 — Date/topic filing and Market organization
 
 - Add optional configure_vault captureDate/topic inputs, a validated one-layer captureFolder and dated create destinations. Keep base-directory search and old-card update destinations; preserve pending-preview configuration binding.

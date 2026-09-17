@@ -1,0 +1,14 @@
+{
+  "installedVersion": "2.0.0+codex.20260917032345",
+  "command": "/bin/sh",
+  "checks": [
+    "17 tools available",
+    "launch active",
+    "status active",
+    "PNG returned"
+  ],
+  "isolatedSession": true,
+  "vaultUnchanged": true,
+  "originalFailure": "spawn cmd.exe ENOENT",
+  "brokenInstalledVersion": "2.0.0+codex.20260913211226"
+}

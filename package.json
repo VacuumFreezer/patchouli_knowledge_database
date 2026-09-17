@@ -11,6 +11,8 @@
     "validate:plugin": "node ./scripts/validate-plugin.mjs",
     "verify:bundle": "pnpm --filter @patchouli/plugin verify:bundle",
     "inspect:mcp": "pnpm --filter @patchouli/plugin smoke:mcp",
-    "inspect:hook": "pnpm --filter @patchouli/plugin smoke:hook"
+    "inspect:hook": "pnpm --filter @patchouli/plugin smoke:hook",
+    "sync:install": "node scripts/sync-install.mjs",
+    "install:local": "node scripts/sync-install.mjs --no-pull"
   }
 }

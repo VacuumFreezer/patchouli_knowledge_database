@@ -538,3 +538,11 @@ Conversation icon resized to 15×24; all new marked cards show an embedded title
 ### Completed date/topic filing follow-up — 2026-09-13T18:19:06-04:00
 
 Implemented optional captureDate/topic runtime routing and automatic skill configuration before each capture. One layer: Sep_13_26 or tokenization_Sep1326. Search remains at the base; old-card updates stay put; previews bind to configured destinations. Installed 2.0.0+codex.20260913221729; 85 tests and installed filing smoke pass. Market’s 13 cards moved with unchanged hashes and working unique-name links to Sep_10_26 (7) and Sep_11_26 (6), backed up under Application Support/Patchouli/backups/market-filing-20260913. Evidence: validation/filing/.
+
+### Completed Mac launch repair — 2026-09-16T23:24:49-04:00
+
+Diagnosed Windows cmd.exe entry point in the installed Mac plugin (2.0.0+codex.20260913211226); reproduced ENOENT. Rebuilt darwin entry point and installed 2.0.0+codex.20260917032345. 87 tests pass, 3 Windows-native skips; actual installed launch/status/icon and 17 tools pass in isolated state. No vault or referenced-task activation. Cross-platform auto-selection at install time is not implemented; target-platform build remains required. Evidence: validation/mac-launch-repair/result.json.
+
+### Completed cross-platform installer follow-up — 2026-09-16T23:37:02-04:00
+
+Added one sync/install command for Terminal and PowerShell, plus --no-pull mode. Native platform build, locked dependencies, full test/validation gates, supported Codex install and installed verification precede SUCCESS. Generated repository outputs restore afterward; manual installation remains supported. Real Mac run passed with 90 tests and four explicit Windows-native skips; dirty-tree sync failure protection passed. Evidence: validation/sync-install/acceptance.md. Native Windows full installation is not executed on this Mac; the script performs its Windows checks when run there.

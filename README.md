@@ -183,16 +183,62 @@ The production plugin bundles the MCP server and review component. Its Mac and W
 
 ## Personal installation
 
-Build on the target platform before registering the repository marketplace and installing Patchouli. On Mac:
+### One-command sync and installation (Mac and Windows)
+
+From the repository root, run the same command in macOS Terminal or Windows PowerShell:
+
+```sh
+node scripts/sync-install.mjs
+```
+
+If you already ran `git pull`, or intentionally want to install reviewed local changes:
+
+```sh
+node scripts/sync-install.mjs --no-pull
+```
+
+Requirements: Node 20.19+, Git, Python 3, pnpm/Corepack and Codex/ChatGPT with the bundled `plugin-creator` helpers. The installer discovers tools on PATH; Mac also checks the standard desktop app locations. For an undiscoverable CLI, set its executable path (not the app directory):
+
+```powershell
+# Windows PowerShell, only if codex is not on PATH
+$env:CODEX_CLI_PATH = 'C:\path with spaces\codex.exe'
+node scripts/sync-install.mjs --no-pull
+```
+
+```sh
+# macOS Terminal, only for a nonstandard CLI location
+export CODEX_CLI_PATH='/path with spaces/codex'
+node scripts/sync-install.mjs --no-pull
+```
+
+The default command refuses a dirty checkout, runs `git pull --ff-only`, then re-executes the pulled installer. It never stashes, resets, commits or pushes your work. The install phase detects the real OS (ignoring any cross-build override), installs locked dependencies, builds/tests, validates the package and starts MCP before installing. Marketplace-name collisions stop instead of replacing another registration. Both Windows and Mac launchers remain packaged.
+
+The installer uses the official marketplace-name/cachebuster helpers and Codex CLI to install. It checks enabled state/version, installed runtime bytes and installed MCP startup before printing:
+
+```text
+SUCCESS: Patchouli installed and verified on Windows.
+Version: 2.0.0+codex.<timestamp>
+MCP: 17 tools available
+安装成功：已验证本机平台及 MCP 启动。请开启新会话使用。
+```
+
+On Mac the platform line says `macOS`. Failures print `FAILED` and exit nonzero. Validation failures occur before installation; if the install or its final verification fails, the script reports failure rather than claiming success (it does not promise an automatic rollback of Codex's plugin state).
+
+The platform-specific `.mcp.json`, manifest cachebuster and `dist/` outputs are backed up and restored after the install, including handled failures. Thus local installation does not dirty these tracked files or make the next pull fail. The installed cache keeps the verified local build even when the repository contains a Windows build. Do not edit generated files while the installer runs. On an abrupt interruption, check for a remaining `.patchouli-install.lock` and `patchouli-install-backup-*` in the OS temporary directory before retrying. Remove a stale lock only after confirming the installer is no longer running. `--no-pull` preserves source edits; normal dependency installation can change ignored node_modules.
+
+### Manual installation remains supported
+
+On either OS, build on that target machine before registering/installing:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
+pnpm inspect:mcp
 codex plugin marketplace add /absolute/path/to/patchouli_knowledge_database
 codex plugin add patchouli@personal
 ```
 
-On Windows, use the same commands with the native repository path, for example `D:\Codex\workspaces\patchouli_knowledge_database`. Read the repository marketplace name before installing; resolve an existing marketplace-name collision instead of replacing unrelated registrations.
+On Windows use the native repository path, such as `D:\Codex\workspaces\patchouli_knowledge_database`. For updates use the official cachebuster helper before reinstalling. Prefer the automated command above: it performs those steps and verifies the result. Read the repository marketplace name first and resolve collisions instead of replacing unrelated registrations.
 
 Start a new Codex task after installation so it loads the newly enabled skill, bundled MCP server, and Hook. Review and trust the Patchouli Hook when Codex prompts you, or inspect it with `/hooks`. In that task, ask Patchouli to configure an existing absolute vault path and optionally a relative cards directory:
 
@@ -265,3 +311,7 @@ Patchouli's scoped Obsidian snippet adds section bars, underlined concept headin
 An exact original v2 snippet upgrades automatically on configure/save. A customized file is preserved and reported as a filename collision, so move your customization to a separately named snippet before retrying. Disable `patchouli-cards-v2` in Obsidian Appearance → CSS snippets to turn off the presentation. Keep a copy of any personal modifications. See `validation/visual-hierarchy/acceptance.md` for research, compatibility and native smoke evidence.
 
 The launch image is a compact transparent 15×24 PNG. The same image appears at the left of each Patchouli card title through the scoped snippet, in reading and editing views. Existing v2.1 snippets upgrade automatically; legacy notes need `cssclasses: [patchouli-card]` to opt into this presentation. No image attachment is added to the card folder.
+
+### MCP missing after switching between Windows and Mac
+
+The checked-in `.mcp.json` is a platform-specific build output. A clean checkout can still contain the other OS’s launcher. If the skill loads but no Patchouli tools appear, inspect the installed `.mcp.json`; `spawn cmd.exe ENOENT` on Mac means a Windows package was installed. Rebuild and run `pnpm inspect:mcp` on the target machine before the cachebuster/reinstall flow. Reinstalling the same mismatched source or only restarting the app does not repair it. Both shell launchers ship, but the MCP command is chosen at build time, not automatically at installation. The sync-install script above now generates and verifies the local platform configuration before installing; manual direct installs still require a target-platform build.
