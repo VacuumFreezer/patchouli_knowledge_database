@@ -17,7 +17,7 @@ for (const scenario of cases.filter(item => !selected || item.id === selected)) 
   const vault = process.env.PATCHOULI_EVAL_VAULT || path.join(root, 'vault');
   await mkdir(data, { recursive: true }); await mkdir(path.join(vault, '.obsidian'), { recursive: true });
   await mkdir(path.join(root, '.agents/skills'), { recursive: true });
-  if (!installed) await cp(path.join(plugin, 'skills/patchouli'), path.join(root, '.agents/skills/patchouli'), { recursive: true });
+  if (!installed) await cp(path.join(plugin, 'skills'), path.join(root, '.agents/skills'), { recursive: true });
   await writeFile(path.join(data, 'configuration.json'), JSON.stringify({ vaultPath: vault, cardsDirectory: process.env.PATCHOULI_EVAL_CARDS_DIRECTORY || 'Cards' }));
   const prefix = process.env.PATCHOULI_EVAL_TITLE_PREFIX;
   const prompt = `请使用 $patchouli，将以下学习对话的知识整理到已经配置的知识库。先给我完整预览，我看过以后再确认。${prefix ? `这是开发 smoke test 的虚构学习材料，卡片标题以「${prefix}」开头，来源如实标为合成测试材料。` : ''}\n\n<learning_conversation>\n${scenario.conversation}\n</learning_conversation>`;

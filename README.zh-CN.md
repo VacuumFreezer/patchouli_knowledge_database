@@ -237,6 +237,8 @@ Checkpoint 用来保存可继续整理的知识线索，不是完整逐字的对
 
 日常使用只需一个 **`patchouli` skill**，它根据请求进入启动、整理／更新或知识问答流程。MCP 工具负责本地检索、预览和文件操作，一般无需手动调用。
 
+插件还内置 **[`humanizer-zh`](plugins/patchouli/skills/humanizer-zh/SKILL.md)**，在预览前润色中文卡片，包括更新已有卡片和从检查点恢复的内容。它处理空话、重复和模板化表达，保留原意、确定程度、术语、公式、代码与引用。预览展示润色后的内容，确认保存后不会再改写。macOS 和 Windows 安装均包含此技能，无需另行安装。
+
 | 能力 | 主要工具 |
 | --- | --- |
 | 知识库配置 | `configure_vault`、`get_configuration` |

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Humanizer 中文润色"
+  short_description: "润色已有中文文本，减少空话和模板化表达，保留事实、语气与作者声音"

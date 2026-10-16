@@ -546,3 +546,12 @@ Diagnosed Windows cmd.exe entry point in the installed Mac plugin (2.0.0+codex.2
 ### Completed cross-platform installer follow-up — 2026-09-16T23:37:02-04:00
 
 Added one sync/install command for Terminal and PowerShell, plus --no-pull mode. Native platform build, locked dependencies, full test/validation gates, supported Codex install and installed verification precede SUCCESS. Generated repository outputs restore afterward; manual installation remains supported. Real Mac run passed with 90 tests and four explicit Windows-native skips; dirty-tree sync failure protection passed. Evidence: validation/sync-install/acceptance.md. Native Windows full installation is not executed on this Mac; the script performs its Windows checks when run there.
+
+### Completed Chinese-polishing skill follow-up — 2026-10-16
+
+- [x] Bundle the supplied `humanizer-zh` skill and its MIT license/resources for both platforms.
+- [x] Apply Chinese prose polishing before create/update previews, including checkpoint-derived cards and conversational revisions; preserve protected fields and reviewed-save semantics.
+- [x] Validate both skills and local references, run the regression suite (90 pass, 4 Windows-only skips), typecheck, bundle/MCP checks, and an actual model/Markdown structure smoke with semantic review.
+- [x] Install with the current Codex CLI and verify enabled version `2.0.0+codex.20261016070856`, all 17 skill file hashes, and installed MCP startup. No user vault changed.
+
+Evidence and limits: `validation/chinese-polish/acceptance.md`, synthetic input/output and `result.json`. The legacy installer helpers are absent on this host; direct CLI installation succeeded. Start a new Codex task to load the new instructions.

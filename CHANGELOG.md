@@ -1,5 +1,10 @@
 # Changelog
 
+### 2026-10-16 — Chinese card polishing
+
+- Bundle the user-supplied Codex adaptation of `humanizer-zh`, with its MIT license, references, fixtures and structure checker, for macOS and Windows.
+- Apply it to Chinese card prose after drafting/merging and connection selection, before preview, including checkpoint-derived cards and revised previews. Preserve meaning, technical content and protected fields; never rewrite a confirmed payload.
+
 ### 2026-09-16T23:37:02-04:00 — Cross-platform sync/install command
 
 - Add scripts/sync-install.mjs for PowerShell and Terminal, with clean-tree fast-forward synchronization and --no-pull for a reviewed local checkout. Re-execute the updated script after pull.

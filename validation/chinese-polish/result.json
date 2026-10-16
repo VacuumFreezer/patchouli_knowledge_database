@@ -1,0 +1,31 @@
+{
+  "installedVersion": "2.0.0+codex.20261016070856",
+  "enabled": true,
+  "skillFileHashes": {
+    "skills/humanizer-zh/LICENSE": "aa00e74769e1b9d8e7fa7094dbfcca9b129a0ded6dce1cf4da050b99146d2fa7",
+    "skills/humanizer-zh/SKILL.md": "f7cc28ba92ba946b415774815afa1f51996f7c7deb2edce7204ce2f452622dd0",
+    "skills/humanizer-zh/references/validation.md": "2db6181cfbf4fd9fea7cad77057add91b86b2cb426a1a26dbf26267f7d801c50",
+    "skills/humanizer-zh/references/patterns.md": "90ffa869a3dd02fa34f2629c6a4101f0af0bdb9c26b0061a4057dbf0c286a7d9",
+    "skills/humanizer-zh/references/fixtures/structure.md": "d2d0c2740d28c44b7aac88e81aed8d50dc6ad90cc08f93a5a00c6ada1d6368e2",
+    "skills/humanizer-zh/references/fixtures/cases.json": "6a62586ee93dd9695976cd45271036f2a92be4f74e1b3b9b6c21a411c8497c0e",
+    "skills/humanizer-zh/agents/openai.yaml": "f08c70e11cfdf76bdbe9774d334b71c7f92ddb81cf8142709c44dc2901fe3dbb",
+    "skills/humanizer-zh/scripts/check_structure.py": "82ba1f91aab7a70abf039e79009fb1b77c036aa892925e5e3df5c2550d20230a",
+    "skills/patchouli/SKILL.md": "07dcdb7cf03700cfd3601ffa1f712580773284d3cd0c4cf27e6619a5900c4770",
+    "skills/patchouli/references/launch.md": "fd86d63994032a4a38e17593cc55fd5b53e4f4bf4fd436e8c7286815b3f8ff6e",
+    "skills/patchouli/references/capture.md": "1e546cd9e181c7c3b42a06192723480d8593a24510dd9aaeb6d3ff7e36995947",
+    "skills/patchouli/references/concepts.md": "84920bab063f5235706b0f64104b58aa7b1b8a25cb751bf8007cb0e316a03cef",
+    "skills/patchouli/references/update.md": "ed1e15a83340630aa1fc75ee12bbd7b26c7ab42e2992ad664c655a05727d60f6",
+    "skills/patchouli/references/chinese-polish.md": "1a47e1c8d59a898004dba42e881f21c4285f0072b4416423dcfed60e97102b3d",
+    "skills/patchouli/references/filing.md": "2b93ad25713b91d656720377406c2e92e23c54bcf623286dc792d2b1039ccf61",
+    "skills/patchouli/references/inquiry.md": "da3e30f6aeb1091f966e82d498926241d2fba4e3c28d14441f6e514a1ba539af",
+    "skills/patchouli/agents/openai.yaml": "4dd78b6e31d205371f542a3c2b657ecde54a55ef171a3a7a082eaf64f7d1df12"
+  },
+  "tests": {
+    "total": 94,
+    "passed": 90,
+    "skippedWindowsOnly": 4,
+    "failed": 0
+  },
+  "structuralSmoke": true,
+  "semanticReview": "Preserved uncertainty, negation, numbers, attribution, math and code; removed empty introductory/praise sentences only. One synthetic case, not exhaustive semantic evaluation."
+}

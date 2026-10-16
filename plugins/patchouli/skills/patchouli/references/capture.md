@@ -25,6 +25,8 @@ Never persist the full conversation, speaker chronology, long quotations, hidden
 
 ## Retrieve, connect and preview together
 
+After retrieval/merging and connection selection below, apply [Chinese prose polishing](chinese-polish.md) to every Chinese card before any preview call. This includes cards recovered from checkpoint drafts and revisions that require a fresh preview.
+
 1. For **each** concept, call `search_cards`, then `get_card` for plausible matches. Search excerpts are insufficient. Reuse an existing card only when it represents the same durable concept; retain its useful content and follow [update.md](update.md). A title collision alone is not permission to replace a different concept.
 2. Call `suggest_links` with the concept's title, categories, Summary and Core. Read relevant candidates and judge their semantic relationship. Search only discovers stored cards; it cannot find an unsaved peer.
 3. Independently compare the whole draft inventory. Propose meaningful prerequisite, explanation, application or contrast relationships, even without lexical overlap. A shared session is a reason to look for connections, not evidence for an invented link. Give a concrete reason and preselect clear relationships. One directed connection is enough for Obsidian to derive a backlink; add a reverse link only when it serves a useful explicit relationship.

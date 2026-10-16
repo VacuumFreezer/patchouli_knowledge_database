@@ -240,6 +240,8 @@ Checkpoints preserve knowledge you can continue organizing; they are not a compl
 
 For everyday use, a single **`patchouli` skill** routes requests into launch, capture/update, or knowledge inquiry workflows. MCP tools handle local retrieval, previews, and file operations. You generally do not need to call them directly.
 
+The bundled **[`humanizer-zh`](plugins/patchouli/skills/humanizer-zh/SKILL.md)** skill polishes Chinese card prose before review, including updates and cards recovered from checkpoints. It removes empty or repetitive wording while preserving meaning, uncertainty, terminology, formulas, code, and references. The preview shows the polished content; saving does not trigger another rewrite. Both macOS and Windows installations include this skill.
+
 | Capability | Main tools |
 | --- | --- |
 | Vault configuration | `configure_vault`, `get_configuration` |

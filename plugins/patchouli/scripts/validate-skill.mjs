@@ -56,6 +56,42 @@ for (const marker of ["[TODO:", "TBD", "FIXME"]) {
   check(!skill.includes(marker) && !metadataSource.includes(marker), `skill contains unfinished marker: ` + marker);
 }
 
+// Check the packaged editing skill and the local documentation graph, including
+// sibling-skill links. This also catches references missing from a distribution.
+const humanizerRoot = path.join(pluginRoot, "skills", "humanizer-zh");
+const humanizer = await readFile(path.join(humanizerRoot, "SKILL.md"), "utf8");
+const humanizerMetadata = frontmatter(humanizer);
+check(humanizerMetadata.name === "humanizer-zh", "bundled editor name must be humanizer-zh");
+check(typeof humanizerMetadata.description === "string" && humanizerMetadata.description.length > 0, "bundled editor needs a description");
+check(humanizerMetadata.license === "MIT", "retain the bundled editor's MIT attribution");
+check((await readFile(path.join(humanizerRoot, "LICENSE"), "utf8")).includes("Permission is hereby granted"), "bundled editor must include its license");
+const humanizerUi = parse(await readFile(path.join(humanizerRoot, "agents/openai.yaml"), "utf8"));
+check(Boolean(humanizerUi.interface?.display_name), "bundled editor needs UI metadata");
+const visited = new Set();
+async function checkLocalLinks(file) {
+  if (visited.has(file)) return;
+  visited.add(file);
+  const source = await readFile(file, "utf8");
+  for (const match of source.matchAll(/\]\(([^)]+)\)/gu)) {
+    const href = match[1];
+    if (/^[a-z][a-z0-9+.-]*:|^#|^</iu.test(href)) continue;
+    const target = path.resolve(path.dirname(file), href.split("#")[0]);
+    const relative = path.relative(path.join(pluginRoot, "skills"), target);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      failures.push(`skill link leaves the package: ${href}`);
+      continue;
+    }
+    try {
+      await access(target);
+      if (target.endsWith(".md")) await checkLocalLinks(target);
+    } catch {
+      failures.push(`missing local skill reference in ${path.basename(file)}: ${href}`);
+    }
+  }
+}
+await checkLocalLinks(skillPath);
+await checkLocalLinks(path.join(humanizerRoot, "SKILL.md"));
+
 if (failures.length > 0) {
   console.error(`Patchouli skill validation failed (` + failures.length + "):");
   for (const failure of failures) console.error("- " + failure);
